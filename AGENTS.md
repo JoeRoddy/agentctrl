@@ -4,7 +4,9 @@ Auto-generated from all feature plans. Last updated: 2026-01-10
 
 ## Active Technologies
 
-- TypeScript 5.x, ES2022 targe + yargs (CLI parsing), Vitest (testing) (002-vitest-cli-testing)
+- TypeScript 5.x, ES2022 target + yargs (CLI parsing), Vitest (testing), Vite (build), Biome (formatting/linting) (003-biome-integration)
+
+- TypeScript 5.x, ES2022 target + yargs (CLI parsing), Vitest (testing) (002-vitest-cli-testing)
 
 - TypeScript 5.x, Node.js 18+ + yargs (CLI parsing only) (001-cli-foundation)
 
@@ -17,15 +19,22 @@ tests/
 
 ## Commands
 
-npm test && npm run lint
+npm run check && npm test
 
 ## Code Style
 
-TypeScript 5.x, Node.js 18+: Follow standard conventions
+TypeScript 5.x, Node.js 18+: Enforced by Biome (formatting and linting)
+- Line width: 100 characters
+- Indentation: Tabs (2-space width)
+- Quotes: Double quotes
+- Semicolons: Always
+- Run `npm run format` before committing
 
 ## Recent Changes
 
-- 002-vitest-cli-testing: Added TypeScript 5.x, ES2022 targe + yargs (CLI parsing), Vitest (testing)
+- 003-biome-integration: Added Biome for formatting and linting; updated build process to include quality checks
+
+- 002-vitest-cli-testing: Added TypeScript 5.x, ES2022 target + yargs (CLI parsing), Vitest (testing)
 
 - 001-cli-foundation: Added TypeScript 5.x, Node.js 18+ + yargs (CLI parsing only)
 
