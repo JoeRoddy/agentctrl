@@ -1,0 +1,29 @@
+# Source and docs
+src/
+tests/
+specs/
+problems/
+scripts/
+
+# Tooling
+.claude/
+.codex/
+.specify/
+
+# VCS and editor
+.git/
+.vscode/
+.idea/
+
+# Logs and env
+*.log
+.env*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Locks (not needed in published package)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

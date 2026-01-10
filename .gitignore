@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+build/
+*.log
+.env*
+
+# System
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+
+# IDE
+.vscode/
+.idea/
