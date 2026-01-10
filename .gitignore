@@ -2,6 +2,9 @@
 node_modules/
 dist/
 build/
+coverage/
+*.tsbuildinfo
+.eslintcache
 *.log
 .env*
 
