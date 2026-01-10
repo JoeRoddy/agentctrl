@@ -1,0 +1,27 @@
+{
+  "name": "agent-ctl",
+  "version": "0.1.0",
+  "description": "Unified agent configuration CLI that compiles canonical agent configs to multiple runtimes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "agents",
+    "cli",
+    "configuration",
+    "compiler",
+    "transpiler",
+    "codex",
+    "claude",
+    "gemini",
+    "cursor",
+    "copilot",
+    "devtools"
+  ],
+  "author": "plsdontemailme@joeroddy.net",
+  "license": "MIT",
+  "type": "commonjs"
+}
