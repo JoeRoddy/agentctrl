@@ -1,6 +1,6 @@
 {
-  "name": "agentctl",
-  "version": "0.1.0",
+  "name": "agentctrl",
+  "version": "0.0.1",
   "description": "Unified agent configuration CLI that compiles canonical agent configs to multiple runtimes.",
   "type": "module",
   "bin": {
