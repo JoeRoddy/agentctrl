@@ -28,7 +28,7 @@ description: "Task list template for feature implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create slash-command module barrel exports in `src/lib/slash-commands/index.ts`
+- [X] T001 Create slash-command module barrel exports in `src/lib/slash-commands/index.ts`
 
 ---
 
@@ -38,11 +38,11 @@ description: "Task list template for feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Implement canonical catalog loader + Markdown/YAML parsing in `src/lib/slash-commands/catalog.ts`
-- [ ] T003 [P] Define target capability profiles + destination paths (Claude canonical) in `src/lib/slash-commands/targets.ts`
-- [ ] T004 [P] Implement target renderers (Claude Markdown, Gemini TOML, Codex Markdown) in `src/lib/slash-commands/formatting.ts`
-- [ ] T005 [P] Implement managed manifest read/write + diff helpers in `src/lib/slash-commands/manifest.ts`
-- [ ] T006 Implement core sync planning/apply logic + summary shaping in `src/lib/slash-commands/sync.ts`
+- [X] T002 Implement canonical catalog loader + Markdown/YAML parsing in `src/lib/slash-commands/catalog.ts`
+- [X] T003 [P] Define target capability profiles + destination paths (Claude canonical) in `src/lib/slash-commands/targets.ts`
+- [X] T004 [P] Implement target renderers (Claude Markdown, Gemini TOML, Codex Markdown) in `src/lib/slash-commands/formatting.ts`
+- [X] T005 [P] Implement managed manifest read/write + diff helpers in `src/lib/slash-commands/manifest.ts`
+- [X] T006 Implement core sync planning/apply logic + summary shaping in `src/lib/slash-commands/sync.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -56,9 +56,9 @@ description: "Task list template for feature implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implement CLI options + prompt flow (targets, scopes, conflicts, preview/confirm, --yes, --json) in `src/cli/commands/sync-commands.ts`
-- [ ] T008 [P] [US1] Register `sync-commands` in `src/cli/index.ts`
-- [ ] T009 [US1] Invoke sync engine + print per-target summary in `src/cli/commands/sync-commands.ts`
+- [X] T007 [US1] Implement CLI options + prompt flow (targets, scopes, conflicts, preview/confirm, --yes, --json) in `src/cli/commands/sync-commands.ts`
+- [X] T008 [P] [US1] Register `sync-commands` in `src/cli/index.ts`
+- [X] T009 [US1] Invoke sync engine + print per-target summary in `src/cli/commands/sync-commands.ts`
 
 **Checkpoint**: User Story 1 should be fully functional and testable independently
 
@@ -72,8 +72,8 @@ description: "Task list template for feature implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Add unsupported-target fallback prompt + defaults in `src/cli/commands/sync-commands.ts`
-- [ ] T011 [US2] Implement slash-command-to-skill conversion + summary updates in `src/lib/slash-commands/sync.ts`
+- [X] T010 [US2] Add unsupported-target fallback prompt + defaults in `src/cli/commands/sync-commands.ts`
+- [X] T011 [US2] Implement slash-command-to-skill conversion + summary updates in `src/lib/slash-commands/sync.ts`
 
 **Checkpoint**: User Story 2 should be independently testable with unsupported targets
 
@@ -87,9 +87,9 @@ description: "Task list template for feature implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Add Codex warning + option selection (global prompts vs convert to skills vs skip) in `src/cli/commands/sync-commands.ts`
-- [ ] T013 [US3] Implement Codex prompt writer + integration in `src/lib/slash-commands/formatting.ts`
-- [ ] T014 [US3] Handle Codex conversion scope prompt + defaults in `src/lib/slash-commands/sync.ts`
+- [X] T012 [US3] Add Codex warning + option selection (global prompts vs convert to skills vs skip) in `src/cli/commands/sync-commands.ts`
+- [X] T013 [US3] Implement Codex prompt writer + integration in `src/lib/slash-commands/formatting.ts`
+- [X] T014 [US3] Handle Codex conversion scope prompt + defaults in `src/lib/slash-commands/sync.ts`
 
 **Checkpoint**: User Story 3 should be independently testable for Codex flows
 
@@ -99,9 +99,9 @@ description: "Task list template for feature implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T015 [P] Update docs for `sync-commands` + Claude canonical standard in `README.md`
-- [ ] T016 [P] Validate and adjust examples in `specs/005-sync-slash-commands/quickstart.md`
-- [ ] T017 [P] Add usage examples in `src/cli/commands/sync-commands.ts`
+- [X] T015 [P] Update docs for `sync-commands` + Claude canonical standard in `README.md`
+- [X] T016 [P] Validate and adjust examples in `specs/005-sync-slash-commands/quickstart.md`
+- [X] T017 [P] Add usage examples in `src/cli/commands/sync-commands.ts`
 
 ---
 

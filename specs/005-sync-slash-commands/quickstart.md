@@ -39,8 +39,8 @@ available), and conflict handling, followed by a per-target summary.
 node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync-commands --yes
 ```
 
-Expected: defaults are applied (project scope for Gemini/Claude, global for
-Codex conversions, skip for unsupported targets) and a summary is printed.
+Expected: defaults are applied (project scope for Gemini/Claude, global prompts
+for Codex, skip for unsupported targets) and a summary is printed.
 
 ## Limit Targets
 
