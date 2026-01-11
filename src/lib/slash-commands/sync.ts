@@ -574,6 +574,32 @@ async function buildTargetPlan(
 			continue;
 		}
 
+		if (previousEntry) {
+			const actionType = modeSelection.outputKind === "skill" ? "convert" : "update";
+			const managedEntry = {
+				name: command.name,
+				hash: outputHash,
+				lastSyncedAt: params.timestamp,
+			};
+			actions.push({
+				targetName,
+				action: actionType,
+				commandName: command.name,
+				scope,
+				destinationPath,
+				contents: output,
+				hash: outputHash,
+			});
+			if (actionType === "update") {
+				summary.update += 1;
+			} else {
+				summary.convert += 1;
+			}
+			nextManaged.set(nameKey, managedEntry);
+			reservedNames.add(nameKey);
+			continue;
+		}
+
 		conflicts += 1;
 		if (conflictResolution === "skip") {
 			actions.push({

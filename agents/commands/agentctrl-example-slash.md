@@ -1,4 +1,5 @@
 ---
+name: name overidden by frontmatter
 description: hello world
 ---
 

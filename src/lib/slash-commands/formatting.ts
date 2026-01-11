@@ -24,27 +24,49 @@ function renderYamlFrontmatter(
 	defaultName?: string,
 ): string | null {
 	const entries = Object.entries(frontmatter);
-	const hasName = Object.hasOwn(frontmatter, "name");
 	const lines: string[] = ["---"];
 
-	if (hasName) {
-		const value = frontmatter.name;
-		if (Array.isArray(value)) {
+	let explicitName: FrontmatterValue | undefined;
+	let explicitDescription: FrontmatterValue | undefined;
+	const remaining: Array<[string, FrontmatterValue]> = [];
+
+	for (const [key, value] of entries) {
+		const normalizedKey = key.toLowerCase();
+		if (normalizedKey === "name" && explicitName === undefined) {
+			explicitName = value;
+			continue;
+		}
+		if (normalizedKey === "description" && explicitDescription === undefined) {
+			explicitDescription = value;
+			continue;
+		}
+		remaining.push([key, value]);
+	}
+
+	const nameValue = explicitName ?? (defaultName ? defaultName : undefined);
+	if (nameValue !== undefined) {
+		if (Array.isArray(nameValue)) {
 			lines.push("name:");
-			for (const entry of value) {
+			for (const entry of nameValue) {
 				lines.push(`  - ${formatYamlString(entry)}`);
 			}
 		} else {
-			lines.push(`name: ${formatYamlString(value)}`);
+			lines.push(`name: ${formatYamlString(nameValue)}`);
 		}
-	} else if (defaultName) {
-		lines.push(`name: ${formatYamlString(defaultName)}`);
 	}
 
-	for (const [key, value] of entries) {
-		if (key === "name") {
-			continue;
+	if (explicitDescription !== undefined) {
+		if (Array.isArray(explicitDescription)) {
+			lines.push("description:");
+			for (const entry of explicitDescription) {
+				lines.push(`  - ${formatYamlString(entry)}`);
+			}
+		} else {
+			lines.push(`description: ${formatYamlString(explicitDescription)}`);
 		}
+	}
+
+	for (const [key, value] of remaining) {
 		if (Array.isArray(value)) {
 			lines.push(`${key}:`);
 			for (const entry of value) {
