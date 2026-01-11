@@ -19,23 +19,23 @@ node dist/cli.js
 
 # Or link for global access during development
 npm link
-agentctl
+agentctrl
 ```
 
 ## Expected Output
 
 ```
-Hello from agentctl!
+Hello from agentctrl!
 ```
 
 ## Verify Installation
 
 ```bash
 # Check version
-agentctl --version
+agentctrl --version
 
 # Check help
-agentctl --help
+agentctrl --help
 ```
 
 ## Development
@@ -50,7 +50,7 @@ npm test
 
 ## Troubleshooting
 
-**"command not found: agentctl"**
+**"command not found: agentctrl"**
 - Run `npm link` to create global symlink
 - Or run directly: `node dist/cli.js`
 

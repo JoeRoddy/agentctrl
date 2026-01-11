@@ -52,11 +52,11 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
 yargs(hideBin(process.argv))
-  .scriptName('agentctl')
+  .scriptName('agentctrl')
   .version()
   .help()
-  .command('$0', 'agentctl CLI', () => {}, () => {
-    console.log('Hello from agentctl!')
+  .command('$0', 'agentctrl CLI', () => {}, () => {
+    console.log('Hello from agentctrl!')
   })
   .parse()
 ```
@@ -67,14 +67,14 @@ yargs(hideBin(process.argv))
 
 **Rationale**:
 - Standard npm pattern for CLI distribution
-- Allows `npx agentctl` and global install
+- Allows `npx agentctrl` and global install
 
 **Configuration**:
 ```json
 {
-  "name": "agentctl",
+  "name": "agentctrl",
   "bin": {
-    "agentctl": "./dist/cli.js"
+    "agentctrl": "./dist/cli.js"
   },
   "type": "module"
 }

@@ -475,7 +475,7 @@ export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 	describe: "Sync canonical skills and slash commands to supported targets",
 	builder: (yargs) =>
 		yargs
-			.usage("agentctl sync [options]")
+			.usage("agentctrl sync [options]")
 			.option("skip", {
 				type: "string",
 				describe: `Comma-separated targets to skip (${SUPPORTED_TARGETS})`,
@@ -505,11 +505,11 @@ export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 				describe: "Output JSON summary",
 			})
 			.epilog(`Supported targets: ${SUPPORTED_TARGETS}`)
-			.example("agentctl sync", "Sync all targets")
-			.example("agentctl sync --skip codex", "Skip a target")
-			.example("agentctl sync --only claude", "Sync only one target")
-			.example("agentctl sync --yes", "Accept defaults and apply changes")
-			.example("agentctl sync --json", "Output a JSON summary"),
+			.example("agentctrl sync", "Sync all targets")
+			.example("agentctrl sync --skip codex", "Skip a target")
+			.example("agentctrl sync --only claude", "Sync only one target")
+			.example("agentctrl sync --yes", "Accept defaults and apply changes")
+			.example("agentctrl sync --json", "Output a JSON summary"),
 	handler: async (argv) => {
 		const skipList = parseList(argv.skip);
 		const onlyList = parseList(argv.only);

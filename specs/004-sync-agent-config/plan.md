@@ -1,14 +1,14 @@
 # Implementation Plan: Sync Agent Config
 
-**Branch**: `004-sync-agent-config` | **Date**: January 10, 2026 | **Spec**: `/Users/joeroddy/Documents/dev/projects/open-source/agentctl/specs/004-sync-agent-config/spec.md`
-**Input**: Feature specification from `/Users/joeroddy/Documents/dev/projects/open-source/agentctl/specs/004-sync-agent-config/spec.md`
+**Branch**: `004-sync-agent-config` | **Date**: January 10, 2026 | **Spec**: `/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/specs/004-sync-agent-config/spec.md`
+**Input**: Feature specification from `/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/specs/004-sync-agent-config/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Add an `agentctl sync` command that copies the canonical agent config from
-`/Users/joeroddy/Documents/dev/projects/open-source/agentctl/agents/skills` to
+Add an `agentctrl sync` command that copies the canonical agent config from
+`/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/agents/skills` to
 all supported targets with `--skip`/`--only` filters, non-destructive behavior,
 per-target status reporting, and repo-root auto-resolution.
 
@@ -43,7 +43,7 @@ constitution principles.
 ### Documentation (this feature)
 
 ```text
-/Users/joeroddy/Documents/dev/projects/open-source/agentctl/specs/004-sync-agent-config/
+/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/specs/004-sync-agent-config/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
@@ -55,7 +55,7 @@ constitution principles.
 ### Source Code (repository root)
 
 ```text
-/Users/joeroddy/Documents/dev/projects/open-source/agentctl/src/
+/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/src/
 ├── cli/
 │   ├── commands/
 │   │   ├── echo.ts
@@ -65,7 +65,7 @@ constitution principles.
 │   └── index.ts
 └── index.ts
 
-/Users/joeroddy/Documents/dev/projects/open-source/agentctl/tests/
+/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/tests/
 └── commands/
     ├── echo.test.ts
     ├── greet.test.ts
@@ -74,8 +74,8 @@ constitution principles.
 ```
 
 **Structure Decision**: Single CLI project. Add the new command under
-`/Users/joeroddy/Documents/dev/projects/open-source/agentctl/src/cli/commands/`
-with tests in `/Users/joeroddy/Documents/dev/projects/open-source/agentctl/tests/commands/`.
+`/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/src/cli/commands/`
+with tests in `/Users/joeroddy/Documents/dev/projects/open-source/agentctrl/tests/commands/`.
 
 ## Complexity Tracking
 

@@ -104,12 +104,12 @@ Non-responsibilities:
 ## Example CLI Usage
 
 ```
-agentctl init
-agentctl validate
-agentctl compile --target claude
-agentctl compile --target codex
-agentctl install --global
-agentctl install --project
+agentctrl init
+agentctrl validate
+agentctrl compile --target claude
+agentctrl compile --target codex
+agentctrl install --global
+agentctrl install --project
 ```
 
 Where:
@@ -179,7 +179,7 @@ It is explicitly **not** another standard competing with them.
 
 Strong, realistic CLI names:
 
-* `agentctl`
+* `agentctrl`
 * `agentforge`
 * `omnigent`
 

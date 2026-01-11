@@ -4,7 +4,7 @@
 
 ## Overview
 
-This guide provides a quick reference for developers working with Biome formatting and linting in the agentctl project.
+This guide provides a quick reference for developers working with Biome formatting and linting in the agentctrl project.
 
 ---
 

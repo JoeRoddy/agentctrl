@@ -10,7 +10,7 @@ Simple greeting command with no arguments.
 ### Interface
 
 ```
-agentctl hello [options]
+agentctrl hello [options]
 ```
 
 ### Options
@@ -23,8 +23,8 @@ agentctl hello [options]
 
 | Input | Output | Exit Code |
 |-------|--------|-----------|
-| `agentctl hello` | `Hello, World!` | 0 |
-| `agentctl hello --help` | Usage information | 0 |
+| `agentctrl hello` | `Hello, World!` | 0 |
+| `agentctrl hello --help` | Usage information | 0 |
 
 ---
 
@@ -35,7 +35,7 @@ Personalized greeting with required name argument.
 ### Interface
 
 ```
-agentctl greet <name> [options]
+agentctrl greet <name> [options]
 ```
 
 ### Arguments
@@ -55,10 +55,10 @@ agentctl greet <name> [options]
 
 | Input | Output | Exit Code |
 |-------|--------|-----------|
-| `agentctl greet Alice` | `Hello, Alice!` | 0 |
-| `agentctl greet Alice --uppercase` | `HELLO, ALICE!` | 0 |
-| `agentctl greet` (missing name) | Error: missing required argument | 1 |
-| `agentctl greet --help` | Usage information | 0 |
+| `agentctrl greet Alice` | `Hello, Alice!` | 0 |
+| `agentctrl greet Alice --uppercase` | `HELLO, ALICE!` | 0 |
+| `agentctrl greet` (missing name) | Error: missing required argument | 1 |
+| `agentctrl greet --help` | Usage information | 0 |
 
 ---
 
@@ -69,7 +69,7 @@ Echo message with repeat and prefix options.
 ### Interface
 
 ```
-agentctl echo [message] [options]
+agentctrl echo [message] [options]
 ```
 
 ### Arguments
@@ -90,12 +90,12 @@ agentctl echo [message] [options]
 
 | Input | Output | Exit Code |
 |-------|--------|-----------|
-| `agentctl echo "test"` | `test` | 0 |
-| `agentctl echo "hi" --times 3` | `hi\nhi\nhi` | 0 |
-| `agentctl echo "msg" --prefix "> "` | `> msg` | 0 |
-| `agentctl echo` | (empty output) | 0 |
-| `agentctl echo "x" --times -1` | Error: times must be positive | 1 |
-| `agentctl echo --help` | Usage information | 0 |
+| `agentctrl echo "test"` | `test` | 0 |
+| `agentctrl echo "hi" --times 3` | `hi\nhi\nhi` | 0 |
+| `agentctrl echo "msg" --prefix "> "` | `> msg` | 0 |
+| `agentctrl echo` | (empty output) | 0 |
+| `agentctrl echo "x" --times -1` | Error: times must be positive | 1 |
+| `agentctrl echo --help` | Usage information | 0 |
 
 ---
 

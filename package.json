@@ -4,7 +4,7 @@
   "description": "Unified agent configuration CLI that compiles canonical agent configs to multiple runtimes.",
   "type": "module",
   "bin": {
-    "agentctl": "./dist/cli.js"
+    "agentctrl": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "scripts": {

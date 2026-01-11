@@ -230,7 +230,7 @@ function resolveProjectManifestPath(
 	homeDir: string,
 ): string {
 	const repoHash = hashIdentifier(repoRoot);
-	const baseDir = path.join(homeDir, ".agentctl", "state", "slash-commands", "projects", repoHash);
+	const baseDir = path.join(homeDir, ".agentctrl", "state", "slash-commands", "projects", repoHash);
 	return path.join(baseDir, `${targetName}-${scope}.toml`);
 }
 
@@ -241,7 +241,7 @@ function resolveLegacyProjectManifestPath(
 	homeDir: string,
 ): string {
 	const repoHash = hashIdentifier(repoRoot);
-	const baseDir = path.join(homeDir, ".agentctl", "slash-commands", "projects", repoHash);
+	const baseDir = path.join(homeDir, ".agentctrl", "slash-commands", "projects", repoHash);
 	return path.join(baseDir, `${targetName}-${scope}.toml`);
 }
 
@@ -251,7 +251,7 @@ function resolveLegacySkillManifestPath(
 	repoRoot: string,
 	homeDir: string,
 ): string {
-	const baseDir = path.join(homeDir, ".agentctl", "slash-commands", "skills");
+	const baseDir = path.join(homeDir, ".agentctrl", "slash-commands", "skills");
 	if (scope === "project") {
 		const repoHash = hashIdentifier(repoRoot);
 		return path.join(baseDir, "projects", repoHash, `${targetName}-project.toml`);
@@ -502,7 +502,7 @@ async function buildTargetPlan(
 	const legacyManifestPaths = new Set<string>();
 	legacyManifestPaths.add(resolveManifestPath(destinationDir));
 	legacyManifestPaths.add(
-		path.join(request.repoRoot, ".agentctl", "slash-commands", `${targetName}-${scope}.toml`),
+		path.join(request.repoRoot, ".agentctrl", "slash-commands", `${targetName}-${scope}.toml`),
 	);
 	legacyManifestPaths.add(
 		resolveLegacyProjectManifestPath(targetName, scope, request.repoRoot, homeDir),

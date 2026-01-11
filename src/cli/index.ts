@@ -42,7 +42,7 @@ export function runCli(argv = process.argv) {
 	let handledFailure = false;
 
 	return yargs(args)
-		.scriptName("agentctl")
+		.scriptName("agentctrl")
 		.version(VERSION)
 		.help()
 		.strict()
@@ -64,10 +64,10 @@ export function runCli(argv = process.argv) {
 		.command(syncCommand)
 		.command(
 			"$0",
-			"agentctl CLI",
+			"agentctrl CLI",
 			() => {},
 			() => {
-				console.log("Hello from agentctl!");
+				console.log("Hello from agentctrl!");
 			},
 		)
 		.parseAsync();
