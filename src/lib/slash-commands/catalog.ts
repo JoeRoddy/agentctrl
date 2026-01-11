@@ -2,12 +2,14 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import type { TargetName } from "./targets.js";
 
+export type FrontmatterValue = string | string[];
+
 export type SlashCommandDefinition = {
 	name: string;
-	description: string | null;
 	prompt: string;
 	sourcePath: string;
 	targetAgents: TargetName[] | null;
+	frontmatter: Record<string, FrontmatterValue>;
 };
 
 export type CommandCatalog = {
@@ -15,12 +17,6 @@ export type CommandCatalog = {
 	commandsPath: string;
 	canonicalStandard: "claude_code";
 	commands: SlashCommandDefinition[];
-};
-
-type FrontmatterData = {
-	description?: string;
-	targetAgents?: string[];
-	targets?: string[];
 };
 
 const FRONTMATTER_MARKER = "---";
@@ -54,8 +50,8 @@ function parseScalar(rawValue: string): string {
 	return trimmed;
 }
 
-function parseFrontmatter(lines: string[]): FrontmatterData {
-	const data: Record<string, string | string[]> = {};
+function parseFrontmatter(lines: string[]): Record<string, FrontmatterValue> {
+	const data: Record<string, FrontmatterValue> = {};
 	let currentListKey: string | null = null;
 
 	for (const line of lines) {
@@ -95,22 +91,13 @@ function parseFrontmatter(lines: string[]): FrontmatterData {
 		currentListKey = null;
 	}
 
-	const result: FrontmatterData = {};
-	if (typeof data.description === "string") {
-		result.description = data.description.trim() || undefined;
-	}
-	const targetAgents = data.targetAgents;
-	const targets = data.targets;
-	if (Array.isArray(targetAgents)) {
-		result.targetAgents = targetAgents.map((value) => value.trim()).filter(Boolean);
-	}
-	if (Array.isArray(targets)) {
-		result.targets = targets.map((value) => value.trim()).filter(Boolean);
-	}
-	return result;
+	return data;
 }
 
-function extractFrontmatter(contents: string): { frontmatter: FrontmatterData; body: string } {
+function extractFrontmatter(contents: string): {
+	frontmatter: Record<string, FrontmatterValue>;
+	body: string;
+} {
 	const lines = contents.split(/\r?\n/);
 	if (lines[0]?.trim() !== FRONTMATTER_MARKER) {
 		return { frontmatter: {}, body: contents.trimEnd() };
@@ -136,11 +123,15 @@ function extractFrontmatter(contents: string): { frontmatter: FrontmatterData; b
 	};
 }
 
-function normalizeTargetList(rawTargets?: string[]): TargetName[] | null {
-	if (!rawTargets || rawTargets.length === 0) {
+function normalizeTargetList(rawTargets?: FrontmatterValue): TargetName[] | null {
+	if (!rawTargets) {
 		return null;
 	}
-	const normalized = rawTargets
+	const targetList = Array.isArray(rawTargets) ? rawTargets : [rawTargets];
+	if (targetList.length === 0) {
+		return null;
+	}
+	const normalized = targetList
 		.map((value) => value.trim())
 		.filter(Boolean)
 		.map((value) => value.toLowerCase());
@@ -191,10 +182,10 @@ export async function loadCommandCatalog(repoRoot: string): Promise<CommandCatal
 		const rawTargets = frontmatter.targetAgents ?? frontmatter.targets;
 		commands.push({
 			name: fileName,
-			description: frontmatter.description ?? null,
 			prompt,
 			sourcePath: filePath,
 			targetAgents: normalizeTargetList(rawTargets),
+			frontmatter,
 		});
 	}
 
