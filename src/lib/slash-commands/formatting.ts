@@ -15,12 +15,9 @@ function formatYamlString(value: string): string {
 export function renderClaudeCommand(command: SlashCommandDefinition): string {
 	const prompt = command.prompt.trimEnd();
 	if (command.description) {
-		const header = [
-			"---",
-			`description: ${formatYamlString(command.description)}`,
-			"---",
-			"",
-		].join("\n");
+		const header = ["---", `description: ${formatYamlString(command.description)}`, "---", ""].join(
+			"\n",
+		);
 		return ensureTrailingNewline(`${header}${prompt}`);
 	}
 	return ensureTrailingNewline(prompt);

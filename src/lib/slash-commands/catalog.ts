@@ -44,7 +44,7 @@ async function listMarkdownFiles(root: string): Promise<string[]> {
 function parseScalar(rawValue: string): string {
 	const trimmed = rawValue.trim();
 	if (
-		(trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+		(trimmed.startsWith('"') && trimmed.endsWith('"')) ||
 		(trimmed.startsWith("'") && trimmed.endsWith("'"))
 	) {
 		return trimmed.slice(1, -1);

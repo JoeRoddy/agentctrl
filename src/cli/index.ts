@@ -6,7 +6,6 @@ import { echoCommand } from "./commands/echo.js";
 import { greetCommand } from "./commands/greet.js";
 import { helloCommand } from "./commands/hello.js";
 import { syncCommand } from "./commands/sync.js";
-import { syncCommandsCommand } from "./commands/sync-commands.js";
 
 const VERSION = "0.1.0";
 
@@ -63,7 +62,6 @@ export function runCli(argv = process.argv) {
 		.command(greetCommand)
 		.command(echoCommand)
 		.command(syncCommand)
-		.command(syncCommandsCommand)
 		.command(
 			"$0",
 			"agentctl CLI",

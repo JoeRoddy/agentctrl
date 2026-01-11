@@ -22,7 +22,7 @@ export function resolveManifestPath(directory: string): string {
 
 function parseTomlValue(rawValue: string): string {
 	const trimmed = rawValue.trim();
-	if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+	if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
 		try {
 			return JSON.parse(trimmed);
 		} catch {

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { loadCommandCatalog, type SlashCommandDefinition } from "./catalog.js";
@@ -10,18 +10,18 @@ import {
 	renderSkillFromCommand,
 } from "./formatting.js";
 import {
+	type ManagedCommand,
 	readManifest,
 	resolveManifestPath,
-	writeManifest,
-	type ManagedCommand,
 	type SyncStateManifest,
+	writeManifest,
 } from "./manifest.js";
 import {
-	SLASH_COMMAND_TARGETS,
 	getDefaultScope,
 	getTargetProfile,
 	resolveCommandDestination,
 	type Scope,
+	SLASH_COMMAND_TARGETS,
 	type TargetName,
 } from "./targets.js";
 

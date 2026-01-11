@@ -27,16 +27,16 @@ CMD
 ## Sync Commands (Interactive)
 
 ```bash
-node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync-commands
+node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync
 ```
 
-Expected: prompts for target selection, per-target scope (project/global where
-available), and conflict handling, followed by a per-target summary.
+Expected: prompts for per-target scope (project/global where available) and
+conflict handling, followed by a per-target summary.
 
 ## Sync Commands with Defaults
 
 ```bash
-node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync-commands --yes
+node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync --yes
 ```
 
 Expected: defaults are applied (project scope for Gemini/Claude, global prompts
@@ -45,12 +45,12 @@ for Codex, skip for unsupported targets) and a summary is printed.
 ## Limit Targets
 
 ```bash
-node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync-commands --only claude,gemini
-node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync-commands --skip codex
+node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync --only claude,gemini
+node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync --skip codex
 ```
 
 ## JSON Output
 
 ```bash
-node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync-commands --json
+node /Users/joeroddy/Documents/dev/projects/open-source/agentctl/dist/cli.js sync --json
 ```
