@@ -75,5 +75,5 @@ agentctrl sync --json
 ## Roadmap
 
 - Skills, agents, and slash commands unification
-- AGENT.md unification (mirroring CLAUDE.md)
-- More target coverage (Cursor, etc.)
+- AGENT.md unification (mirroring CLAUDE.md, cursor rules, etc)
+- private / local config
