@@ -16,15 +16,16 @@ that into a single source of truth and compiles it to each runtime.
 Right now, agentctrl focuses on **skills** and **slash commands**:
 
 - Canonical skills: `agents/skills/`
-- Canonical slash commands: `agents/commands/` (Claude Code format: Markdown with optional YAML frontmatter)
+- Canonical slash commands: `agents/commands/` (Claude Code format: Markdown with optional YAML frontmatter;
+  filename becomes the command name; use `targets`/`targetAgents` to scope sync)
 - `agentctrl sync` copies skills and maps slash commands into each supported target's expected location
 
 ## Supported targets (current)
 
-- Claude Code
-- OpenAI Codex
-- GitHub Copilot
-- Gemini CLI (skills require `experimental.skills` to be enabled)
+- Claude Code (skills + slash commands, project/global)
+- OpenAI Codex (skills + global slash-command prompts)
+- GitHub Copilot CLI (skills; slash commands are converted to skills)
+- Gemini CLI (skills require `experimental.skills`; slash commands project/global)
 
 ## Quick start
 
@@ -33,13 +34,32 @@ Right now, agentctrl focuses on **skills** and **slash commands**:
 mkdir -p agents/skills
 printf "# My Skill\n" > agents/skills/example.md
 
-# 2) Build the CLI
+# 2) Create a canonical slash command
+mkdir -p agents/commands
+cat <<'CMD' > agents/commands/plan-release.md
+---
+description: Plan a release
+targets:
+  - claude
+  - gemini
+---
+Draft a release plan with milestones and owners.
+CMD
+
+# 3) Build the CLI
 npm install
 npm run build
 
-# 3) Sync to all targets
+# 4) Sync to all targets
 node dist/cli.js sync
 ```
+
+## Slash commands
+
+Slash commands are Markdown files in `agents/commands/`. The filename is the command name. Optional
+YAML frontmatter can include metadata like `description` and can scope targets via `targets` or
+`targetAgents` (values: `claude`, `gemini`, `codex`, `copilot`). By default, commands sync to all
+supported targets.
 
 ## Sync command
 
