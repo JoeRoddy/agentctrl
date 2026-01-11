@@ -93,6 +93,8 @@ type TargetPlan = {
 	removeMissing: boolean;
 };
 
+const SKILL_FRONTMATTER_KEYS_TO_REMOVE = new Set(["tools", "model", "color"]);
+
 function emptySummaryCounts(): SummaryCounts {
 	return { created: 0, updated: 0, removed: 0, converted: 0, skipped: 0 };
 }
@@ -107,6 +109,67 @@ function normalizeName(name: string): string {
 
 function normalizeSkillKey(name: string): string {
 	return path.normalize(name).replace(/\\/g, "/").toLowerCase();
+}
+
+function stripFrontmatterFields(contents: string, keysToRemove: Set<string>): string {
+	const lines = contents.split(/\r?\n/);
+	if (lines[0]?.trim() !== "---") {
+		return contents;
+	}
+
+	let endIndex = -1;
+	for (let i = 1; i < lines.length; i += 1) {
+		if (lines[i].trim() === "---") {
+			endIndex = i;
+			break;
+		}
+	}
+
+	if (endIndex === -1) {
+		return contents;
+	}
+
+	const frontmatterLines = lines.slice(1, endIndex);
+	const filtered: string[] = [];
+	let skippingList = false;
+
+	for (const line of frontmatterLines) {
+		const trimmed = line.trim();
+		const match = trimmed.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+
+		if (skippingList) {
+			if (match && !keysToRemove.has(match[1])) {
+				skippingList = false;
+			} else if (!match) {
+				const shouldSkip = trimmed === "" || trimmed.startsWith("-") || trimmed.startsWith("#");
+				if (shouldSkip) {
+					continue;
+				}
+				skippingList = false;
+			} else {
+				continue;
+			}
+		}
+
+		if (match) {
+			const [, key, rawValue] = match;
+			if (keysToRemove.has(key)) {
+				const rest = rawValue.trim();
+				if (!rest || rest.startsWith("#")) {
+					skippingList = true;
+				}
+				continue;
+			}
+		}
+
+		if (!skippingList) {
+			filtered.push(line);
+		}
+	}
+
+	const eol = contents.includes("\r\n") ? "\r\n" : "\n";
+	const outputLines = [lines[0], ...filtered, ...lines.slice(endIndex)];
+	return outputLines.join(eol);
 }
 
 async function listSkillDirectories(root: string): Promise<string[]> {
@@ -310,7 +373,10 @@ async function buildTargetPlan(
 			continue;
 		}
 
-		const output = subagent.rawContents;
+		const output =
+			outputKind === "skill"
+				? stripFrontmatterFields(subagent.rawContents, SKILL_FRONTMATTER_KEYS_TO_REMOVE)
+				: subagent.rawContents;
 		const outputHash = hashContent(output);
 		const { destinationPath } = resolveOutputPaths(
 			outputKind,

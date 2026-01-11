@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { applySubagentSync, planSubagentSync } from "../../src/lib/subagents/sync.js";
@@ -104,6 +104,43 @@ describe.sequential("subagent sync", () => {
 			const summary = await applySubagentSync(removalPlan);
 			expect(summary.warnings.some((warning) => warning.includes("Skipped removing"))).toBe(true);
 			expect(await pathExists(destination)).toBe(true);
+		});
+	});
+
+	it("removes tools, model, and color when converting to skills", async () => {
+		await withTempRepo(async (root) => {
+			await createRepoRoot(root);
+			const catalogDir = path.join(root, "agents", "agents");
+			await mkdir(catalogDir, { recursive: true });
+			const contents = [
+				"---",
+				"name: planner",
+				"model: gpt-4",
+				"tools:",
+				"  - read",
+				"color: blue",
+				"description: keep me",
+				"---",
+				"Body text.",
+				"",
+			].join("\n");
+			await writeFile(path.join(catalogDir, "planner.md"), contents, "utf8");
+
+			const plan = await planSubagentSync({
+				repoRoot: root,
+				targets: ["codex"],
+				removeMissing: true,
+			});
+			await applySubagentSync(plan);
+
+			const destination = path.join(root, ".codex", "skills", "planner", "SKILL.md");
+			const output = await readFile(destination, "utf8");
+			expect(output).toContain("name: planner");
+			expect(output).toContain("description: keep me");
+			expect(output).toContain("Body text.");
+			expect(output).not.toContain("model:");
+			expect(output).not.toContain("tools:");
+			expect(output).not.toContain("color:");
 		});
 	});
 });
