@@ -70,10 +70,12 @@ describe.sequential("sync command", () => {
 			const codex = await readFile(path.join(root, ".codex", "skills", "example.txt"), "utf8");
 			const claude = await readFile(path.join(root, ".claude", "skills", "example.txt"), "utf8");
 			const copilot = await readFile(path.join(root, ".github", "skills", "example.txt"), "utf8");
+			const gemini = await readFile(path.join(root, ".gemini", "skills", "example.txt"), "utf8");
 
 			expect(codex).toBe("hello");
 			expect(claude).toBe("hello");
 			expect(copilot).toBe("hello");
+			expect(gemini).toBe("hello");
 			expect(exitSpy).not.toHaveBeenCalled();
 		});
 	});
@@ -90,6 +92,7 @@ describe.sequential("sync command", () => {
 			expect(await pathExists(path.join(root, ".claude", "skills", "example.txt"))).toBe(true);
 			expect(await pathExists(path.join(root, ".codex", "skills"))).toBe(false);
 			expect(await pathExists(path.join(root, ".github", "skills"))).toBe(false);
+			expect(await pathExists(path.join(root, ".gemini", "skills"))).toBe(false);
 		});
 	});
 
@@ -154,7 +157,7 @@ describe.sequential("sync command", () => {
 			const output = logSpy.mock.calls[0]?.[0];
 			const parsed = JSON.parse(output);
 			expect(await realpath(parsed.sourcePath)).toBe(sourcePath);
-			expect(parsed.results).toHaveLength(3);
+			expect(parsed.results).toHaveLength(4);
 			expect(parsed.hadFailures).toBe(false);
 		});
 	});

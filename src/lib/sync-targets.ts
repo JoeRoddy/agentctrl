@@ -2,6 +2,7 @@ export const TARGETS = [
 	{ name: "codex", relativePath: ".codex/skills" },
 	{ name: "claude", relativePath: ".claude/skills" },
 	{ name: "copilot", relativePath: ".github/skills" },
+	{ name: "gemini", relativePath: ".gemini/skills" },
 ] as const;
 
 export type TargetName = (typeof TARGETS)[number]["name"];

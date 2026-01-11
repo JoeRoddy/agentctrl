@@ -23,10 +23,7 @@ Right now, agentctl focuses on **skills**:
 - Claude Code
 - OpenAI Codex
 - GitHub Copilot
-
-## Planned targets (near-term)
-
-- Gemini (not supported yet, but planned)
+- Gemini CLI (skills require `experimental.skills` to be enabled)
 
 ## Quick start
 
@@ -48,6 +45,7 @@ node dist/cli.js sync
 ```bash
 agentctl sync
 agentctl sync --only claude
+agentctl sync --only gemini
 agentctl sync --skip codex
 agentctl sync --json
 ```
@@ -56,4 +54,4 @@ agentctl sync --json
 
 - Skills, agents, and slash commands unification
 - AGENT.md unification (mirroring CLAUDE.md)
-- Gemini target support
+- More target coverage (Cursor, etc.)

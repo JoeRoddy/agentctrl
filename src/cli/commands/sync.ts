@@ -74,7 +74,8 @@ export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 			.epilog(`Supported targets: ${SUPPORTED_TARGETS}`)
 			.example("agentctl sync", "Sync all targets")
 			.example("agentctl sync --skip codex", "Skip a target")
-			.example("agentctl sync --only claude", "Sync only one target"),
+			.example("agentctl sync --only claude", "Sync only one target")
+			.example("agentctl sync --only gemini", "Sync only Gemini"),
 	handler: async (argv) => {
 		const skipList = parseList(argv.skip);
 		const onlyList = parseList(argv.only);
