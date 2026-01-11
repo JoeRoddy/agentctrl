@@ -1,0 +1,95 @@
+openapi: 3.1.0
+info:
+  title: agentctl sync contract
+  version: 1.0.0
+  description: Contract for syncing canonical agent configuration to supported targets.
+paths:
+  /sync:
+    post:
+      summary: Sync canonical agent configuration
+      operationId: syncAgents
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                skip:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/TargetName"
+                only:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/TargetName"
+                jsonOutput:
+                  type: boolean
+                  default: false
+              description: Optional filter lists mirroring CLI flags.
+      responses:
+        "200":
+          description: Sync completed with no failures.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncSummary"
+        "207":
+          description: Sync completed with one or more target failures.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncSummary"
+        "400":
+          description: Invalid options, unknown targets, or no targets selected.
+        "404":
+          description: Canonical source directory not found.
+        "500":
+          description: Unexpected copy error.
+components:
+  schemas:
+    TargetName:
+      type: string
+      enum:
+        - codex
+        - claude
+        - copilot
+    SyncResult:
+      type: object
+      additionalProperties: false
+      properties:
+        targetName:
+          $ref: "#/components/schemas/TargetName"
+        status:
+          type: string
+          enum:
+            - synced
+            - skipped
+            - failed
+        message:
+          type: string
+        error:
+          type: string
+          nullable: true
+      required:
+        - targetName
+        - status
+        - message
+    SyncSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        sourcePath:
+          type: string
+          description: Absolute path to the canonical config directory.
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncResult"
+        hadFailures:
+          type: boolean
+      required:
+        - sourcePath
+        - results
+        - hadFailures

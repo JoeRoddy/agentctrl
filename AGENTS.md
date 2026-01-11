@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-01-10
 
 ## Active Technologies
+- TypeScript 5.9 (ES2022) on Node.js 18+ + yargs, Node.js fs/promises + path (004-sync-agent-config)
+- Filesystem (repo-local directories) (004-sync-agent-config)
 
 - TypeScript 5.x, ES2022 target + yargs (CLI parsing), Vitest (testing), Vite (build), Biome (formatting/linting) (003-biome-integration)
 
@@ -31,12 +33,12 @@ TypeScript 5.x, Node.js 18+: Enforced by Biome (formatting and linting)
 - Run `npm run format` before committing
 
 ## Recent Changes
+- 004-sync-agent-config: Added TypeScript 5.9 (ES2022) on Node.js 18+ + yargs, Node.js fs/promises + path
 
 - 003-biome-integration: Added Biome for formatting and linting; updated build process to include quality checks
 
 - 002-vitest-cli-testing: Added TypeScript 5.x, ES2022 target + yargs (CLI parsing), Vitest (testing)
 
-- 001-cli-foundation: Added TypeScript 5.x, Node.js 18+ + yargs (CLI parsing only)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
