@@ -13,7 +13,7 @@ description: "Task list for Sync Custom Subagents"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create subagent module scaffolding in `src/lib/subagents/index.ts` with new files `src/lib/subagents/catalog.ts`, `src/lib/subagents/manifest.ts`, `src/lib/subagents/targets.ts`, `src/lib/subagents/sync.ts`
+- [x] T001 Create subagent module scaffolding in `src/lib/subagents/index.ts` with new files `src/lib/subagents/catalog.ts`, `src/lib/subagents/manifest.ts`, `src/lib/subagents/targets.ts`, `src/lib/subagents/sync.ts`
 
 ---
 
@@ -21,11 +21,11 @@ description: "Task list for Sync Custom Subagents"
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-- [ ] T002 Implement strict frontmatter parsing + validation (invalid YAML, missing end marker, empty body) in `src/lib/subagents/catalog.ts`
-- [ ] T003 Implement subagent catalog loader in `src/lib/subagents/catalog.ts` (recursive scan of `agents/agents/`, error on non-.md files, resolve names, case-insensitive uniqueness, treat missing/empty dir as empty)
-- [ ] T004 [P] Implement subagent sync manifest read/write (TOML) in `src/lib/subagents/manifest.ts` for managed outputs tracking
-- [ ] T005 [P] Define target path mappings and defaults in `src/lib/subagents/targets.ts` (Claude subagent path + skill paths for others)
-- [ ] T006 Implement shared sync helpers + summary types in `src/lib/subagents/sync.ts` (hashing, existing file reads, action planning primitives)
+- [x] T002 Implement strict frontmatter parsing + validation (invalid YAML, missing end marker, empty body) in `src/lib/subagents/catalog.ts`
+- [x] T003 Implement subagent catalog loader in `src/lib/subagents/catalog.ts` (recursive scan of `agents/agents/`, error on non-.md files, resolve names, case-insensitive uniqueness, treat missing/empty dir as empty)
+- [x] T004 [P] Implement subagent sync manifest read/write (TOML) in `src/lib/subagents/manifest.ts` for managed outputs tracking
+- [x] T005 [P] Define target path mappings and defaults in `src/lib/subagents/targets.ts` (Claude subagent path + skill paths for others)
+- [x] T006 Implement shared sync helpers + summary types in `src/lib/subagents/sync.ts` (hashing, existing file reads, action planning primitives)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -39,8 +39,8 @@ description: "Task list for Sync Custom Subagents"
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implement Claude-target plan + apply actions (create/update/remove) in `src/lib/subagents/sync.ts`
-- [ ] T008 [US1] Wire subagent sync into CLI flow and summary output in `src/cli/commands/sync.ts`
+- [x] T007 [US1] Implement Claude-target plan + apply actions (create/update/remove) in `src/lib/subagents/sync.ts`
+- [x] T008 [US1] Wire subagent sync into CLI flow and summary output in `src/cli/commands/sync.ts`
 
 ---
 
@@ -52,8 +52,8 @@ description: "Task list for Sync Custom Subagents"
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Implement conversion outputs (write `SKILL.md` with raw contents) for unsupported targets in `src/lib/subagents/sync.ts`
-- [ ] T010 [US2] Add default conversion warnings + target filter handling in `src/cli/commands/sync.ts`
+- [x] T009 [US2] Implement conversion outputs (write `SKILL.md` with raw contents) for unsupported targets in `src/lib/subagents/sync.ts`
+- [x] T010 [US2] Add default conversion warnings + target filter handling in `src/cli/commands/sync.ts`
 
 ---
 
@@ -65,8 +65,8 @@ description: "Task list for Sync Custom Subagents"
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Implement target conflict detection (different existing content) to skip + warn in `src/lib/subagents/sync.ts`
-- [ ] T012 [US3] Surface catalog validation errors (invalid frontmatter, non-md, empty content, name collisions) in `src/cli/commands/sync.ts`
+- [x] T011 [US3] Implement target conflict detection (different existing content) to skip + warn in `src/lib/subagents/sync.ts`
+- [x] T012 [US3] Surface catalog validation errors (invalid frontmatter, non-md, empty content, name collisions) in `src/cli/commands/sync.ts`
 
 ---
 
@@ -74,8 +74,8 @@ description: "Task list for Sync Custom Subagents"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T013 [P] Update documentation for canonical subagents and sync behavior in `README.md`
-- [ ] T014 [P] Validate quickstart instructions and outputs in `specs/006-add-custom-subagents/quickstart.md`
+- [x] T013 [P] Update documentation for canonical subagents and sync behavior in `README.md`
+- [x] T014 [P] Validate quickstart instructions and outputs in `specs/006-add-custom-subagents/quickstart.md`
 
 ---
 
