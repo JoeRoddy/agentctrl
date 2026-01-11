@@ -13,12 +13,11 @@ async function withTempRepo(fn: (root: string) => Promise<void>): Promise<void> 
 }
 
 async function withCwd(dir: string, fn: () => Promise<void>): Promise<void> {
-	const previous = process.cwd();
-	process.chdir(dir);
+	const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(dir);
 	try {
 		await fn();
 	} finally {
-		process.chdir(previous);
+		cwdSpy.mockRestore();
 	}
 }
 
@@ -129,8 +128,7 @@ describe.sequential("sync command", () => {
 		await withTempRepo(async (root) => {
 			await createRepoRoot(root);
 			await mkdir(path.join(root, "subdir"), { recursive: true });
-			const canonicalRoot = await realpath(root);
-			const expected = path.join(canonicalRoot, "agents", "skills");
+			const expected = path.join(root, "agents", "skills");
 
 			await withCwd(path.join(root, "subdir"), async () => {
 				await runCli(["node", "agentctl", "sync"]);
@@ -155,7 +153,7 @@ describe.sequential("sync command", () => {
 			expect(logSpy).toHaveBeenCalled();
 			const output = logSpy.mock.calls[0]?.[0];
 			const parsed = JSON.parse(output);
-			expect(parsed.sourcePath).toBe(sourcePath);
+			expect(await realpath(parsed.sourcePath)).toBe(sourcePath);
 			expect(parsed.results).toHaveLength(3);
 			expect(parsed.hadFailures).toBe(false);
 		});
