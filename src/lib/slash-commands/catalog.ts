@@ -8,6 +8,7 @@ export type SlashCommandDefinition = {
 	name: string;
 	prompt: string;
 	sourcePath: string;
+	rawContents: string;
 	targetAgents: TargetName[] | null;
 	frontmatter: Record<string, FrontmatterValue>;
 };
@@ -184,6 +185,7 @@ export async function loadCommandCatalog(repoRoot: string): Promise<CommandCatal
 			name: fileName,
 			prompt,
 			sourcePath: filePath,
+			rawContents: contents,
 			targetAgents: normalizeTargetList(rawTargets),
 			frontmatter,
 		});

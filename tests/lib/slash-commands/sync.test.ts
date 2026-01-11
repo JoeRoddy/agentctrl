@@ -53,6 +53,23 @@ async function createCanonicalCommandWithCustomName(
 	await writeFile(path.join(commandsDir, `${fileName}.md`), contents);
 }
 
+async function createCanonicalCommandWithOrderedFrontmatter(
+	root: string,
+	name = "frontmatter-ordered",
+): Promise<void> {
+	const commandsDir = path.join(root, "agents", "commands");
+	await mkdir(commandsDir, { recursive: true });
+	const contents = [
+		"---",
+		"tags:",
+		'  - "first"',
+		'description: "Ordered frontmatter"',
+		"---",
+		"Say hello.",
+	].join("\n");
+	await writeFile(path.join(commandsDir, `${name}.md`), contents);
+}
+
 describe("slash command sync planning", () => {
 	it("converts commands to project skills for unsupported targets", async () => {
 		await withTempRepo(async (root) => {
@@ -129,6 +146,32 @@ describe("slash command sync planning", () => {
 			);
 			expect(output).toContain('name: "custom-skill-name"');
 			expect(output).not.toContain('name: "named-command"');
+		});
+	});
+
+	it("keeps frontmatter for markdown command targets", async () => {
+		await withTempRepo(async (root) => {
+			await createCanonicalCommandWithOrderedFrontmatter(root, "frontmatter-ordered");
+
+			const plan = await planSlashCommandSync({
+				repoRoot: root,
+				targets: ["claude"],
+				conflictResolution: "skip",
+				removeMissing: true,
+			});
+
+			await applySlashCommandSync(plan);
+
+			const output = await readFile(
+				path.join(root, ".claude", "commands", "frontmatter-ordered.md"),
+				"utf8",
+			);
+			expect(output).toContain("---");
+			expect(output).toContain('  - "first"');
+			expect(output).toContain('description: "Ordered frontmatter"');
+			expect(output.indexOf("tags:")).toBeLessThan(
+				output.indexOf('description: "Ordered frontmatter"'),
+			);
 		});
 	});
 

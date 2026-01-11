@@ -87,8 +87,7 @@ function renderYamlFrontmatter(
 const GEMINI_RESERVED_KEYS = new Set(["prompt", "targets", "targetagents"]);
 
 export function renderClaudeCommand(command: SlashCommandDefinition): string {
-	const prompt = command.prompt.trimEnd();
-	return ensureTrailingNewline(prompt);
+	return command.rawContents;
 }
 
 export function renderGeminiCommand(command: SlashCommandDefinition): string {
@@ -108,8 +107,7 @@ export function renderGeminiCommand(command: SlashCommandDefinition): string {
 }
 
 export function renderCodexPrompt(command: SlashCommandDefinition): string {
-	const prompt = command.prompt.trimEnd();
-	return ensureTrailingNewline(prompt);
+	return command.rawContents;
 }
 
 export function renderSkillFromCommand(command: SlashCommandDefinition): string {
