@@ -90,11 +90,7 @@ describe("agent templating", () => {
 		["nested selector", "Hi{claude nested {codex x} }there", /Nested selector block/],
 		["unterminated block", "Hi{claude x", /Unterminated selector block/],
 		["missing content", "Hi{claude}", /missing content/],
-		[
-			"include/exclude conflict",
-			"Hi{claude,not:claude x}there",
-			/includes and excludes/,
-		],
+		["include/exclude conflict", "Hi{claude,not:claude x}there", /includes and excludes/],
 	])("throws for %s", (_label, content, pattern) => {
 		expect(() =>
 			applyAgentTemplating({

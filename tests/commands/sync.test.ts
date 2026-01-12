@@ -64,7 +64,11 @@ async function createCanonicalCommands(root: string): Promise<string> {
 	return await realpath(sourceDir);
 }
 
-async function writeCanonicalCommand(root: string, name: string, contents: string): Promise<string> {
+async function writeCanonicalCommand(
+	root: string,
+	name: string,
+	contents: string,
+): Promise<string> {
 	const sourceDir = path.join(root, "agents", "commands");
 	await mkdir(sourceDir, { recursive: true });
 	const filePath = path.join(sourceDir, `${name}.md`);
@@ -312,9 +316,7 @@ describe.sequential("sync command", () => {
 			});
 
 			expect(errorSpy).toHaveBeenCalled();
-			expect(errorSpy).toHaveBeenCalledWith(
-				expect.stringContaining("Valid agents: claude."),
-			);
+			expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Valid agents: claude."));
 			expect(exitSpy).toHaveBeenCalledWith(1);
 			expect(await pathExists(path.join(root, ".claude", "commands"))).toBe(false);
 		});

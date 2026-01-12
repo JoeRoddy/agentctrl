@@ -165,10 +165,7 @@ function processTemplating(
 		}
 
 		if (content[selectorEnd] === "}") {
-			throw createTemplatingError(
-				`Selector block "{${selectorRaw}}" is missing content`,
-				context,
-			);
+			throw createTemplatingError(`Selector block "{${selectorRaw}}" is missing content`, context);
 		}
 
 		const { include, exclude } = parseSelectorList(selectorRaw, validSet, context);

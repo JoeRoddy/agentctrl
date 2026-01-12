@@ -283,10 +283,7 @@ describe("slash command sync planning", () => {
 		await withTempRepo(async (root) => {
 			const commandsDir = path.join(root, "agents", "commands");
 			await mkdir(commandsDir, { recursive: true });
-			await writeFile(
-				path.join(commandsDir, "broken.md"),
-				"Hi{claude,not:claude invalid}",
-			);
+			await writeFile(path.join(commandsDir, "broken.md"), "Hi{claude,not:claude invalid}");
 
 			await expect(
 				planSlashCommandSync({

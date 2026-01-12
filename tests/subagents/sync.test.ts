@@ -178,13 +178,7 @@ describe.sequential("subagent sync", () => {
 
 			await applySubagentSync(plan);
 
-			const destination = path.join(
-				root,
-				".codex",
-				"skills",
-				"templated-skill",
-				"SKILL.md",
-			);
+			const destination = path.join(root, ".codex", "skills", "templated-skill", "SKILL.md");
 			const output = await readFile(destination, "utf8");
 			expect(output).toContain("CODEX");
 			expect(output).not.toContain("OTHER");

@@ -1,10 +1,6 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import {
-	extractFrontmatter,
-	normalizeTargetList,
-	type FrontmatterValue,
-} from "./frontmatter.js";
+import { extractFrontmatter, type FrontmatterValue, normalizeTargetList } from "./frontmatter.js";
 import type { TargetName } from "./targets.js";
 
 export type { FrontmatterValue } from "./frontmatter.js";
