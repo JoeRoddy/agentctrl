@@ -279,17 +279,17 @@ describe.sequential("sync command", () => {
 			await writeCanonicalSkillFile(
 				root,
 				"example.txt",
-				"Skill<agents:claude> OK</agents><agents:not:claude> NO</agents>",
+				"Skill<agents claude> OK</agents><agents not:claude> NO</agents>",
 			);
 			await writeCanonicalCommand(
 				root,
 				"example",
-				"Command<agents:claude> OK</agents><agents:not:claude> NO</agents>",
+				"Command<agents claude> OK</agents><agents not:claude> NO</agents>",
 			);
 			await writeSubagent(
 				root,
 				"helper",
-				"Subagent<agents:claude> OK</agents><agents:not:claude> NO</agents>",
+				"Subagent<agents claude> OK</agents><agents not:claude> NO</agents>",
 			);
 
 			await withCwd(root, async () => {
@@ -321,7 +321,7 @@ describe.sequential("sync command", () => {
 	it("fails before writing outputs when templating is invalid in commands", async () => {
 		await withTempRepo(async (root) => {
 			await createRepoRoot(root);
-			await writeCanonicalCommand(root, "broken", "Hi<agents:bogus> invalid</agents>");
+			await writeCanonicalCommand(root, "broken", "Hi<agents bogus> invalid</agents>");
 
 			await withCwd(root, async () => {
 				await runCli(["node", "agentctrl", "sync", "--only", "claude", "--yes"]);
@@ -342,7 +342,7 @@ describe.sequential("sync command", () => {
 			await writeCanonicalSkillFile(
 				root,
 				"bad.txt",
-				"Hi<agents:claude,not:claude> broken</agents>",
+				"Hi<agents claude,not:claude> broken</agents>",
 			);
 			await writeCanonicalCommand(root, "ok", "Say hello.");
 

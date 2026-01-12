@@ -4,7 +4,7 @@ describe("agent templating", () => {
 	const validAgents = ["claude", "codex", "gemini"];
 
 	it("includes scoped blocks for matching agents", () => {
-		const content = "Hello<agents:claude> world</agents>!";
+		const content = "Hello<agents claude> world</agents>!";
 		const output = applyAgentTemplating({
 			content,
 			target: "claude",
@@ -15,7 +15,7 @@ describe("agent templating", () => {
 	});
 
 	it("excludes scoped blocks for non-matching agents", () => {
-		const content = "Hello<agents:claude> world</agents>!";
+		const content = "Hello<agents claude> world</agents>!";
 		const output = applyAgentTemplating({
 			content,
 			target: "codex",
@@ -26,7 +26,7 @@ describe("agent templating", () => {
 	});
 
 	it("supports not: exclusions and case-insensitive matching", () => {
-		const content = "A<agents:not:claude,gemini> skip</agents>B<agents:ClAuDe> keep</agents>C";
+		const content = "A<agents not:claude,gemini> skip</agents>B<agents ClAuDe> keep</agents>C";
 		const claudeOutput = applyAgentTemplating({
 			content,
 			target: "claude",
@@ -43,7 +43,7 @@ describe("agent templating", () => {
 	});
 
 	it("supports escaped closing tags and multi-line content", () => {
-		const content = "Start<agents:claude>line1\nline2 \\</agents> tail</agents>End";
+		const content = "Start<agents claude>line1\nline2 \\</agents> tail</agents>End";
 		const output = applyAgentTemplating({
 			content,
 			target: "claude",
@@ -54,7 +54,7 @@ describe("agent templating", () => {
 	});
 
 	it("allows standard HTML markup inside templated blocks", () => {
-		const content = "<agents:claude><div> hello </div></agents>";
+		const content = "<agents claude><div> hello </div></agents>";
 		const output = applyAgentTemplating({
 			content,
 			target: "claude",
@@ -89,7 +89,7 @@ describe("agent templating", () => {
 	it("validates selectors without mutating content", () => {
 		expect(() =>
 			validateAgentTemplating({
-				content: "Hello<agents:claude> world</agents>!",
+				content: "Hello<agents claude> world</agents>!",
 				validAgents,
 			}),
 		).not.toThrow();
@@ -98,7 +98,7 @@ describe("agent templating", () => {
 	it("lists valid agents for unknown selectors", () => {
 		expect(() =>
 			applyAgentTemplating({
-				content: "Hello<agents:bogus> world</agents>!",
+				content: "Hello<agents bogus> world</agents>!",
 				target: "claude",
 				validAgents,
 			}),
@@ -106,20 +106,20 @@ describe("agent templating", () => {
 	});
 
 	it.each([
-		["empty selector list", "Hi<agents: >x</agents>there", /Selector list cannot be empty/],
-		["empty selector entry", "Hi<agents:claude,,codex> x</agents>there", /empty entry/],
-		["empty not entry", "Hi<agents:not: >x</agents>there", /empty not: entry/],
+		["empty selector list", "Hi<agents  >x</agents>there", /Selector list cannot be empty/],
+		["empty selector entry", "Hi<agents claude,,codex> x</agents>there", /empty entry/],
+		["empty not entry", "Hi<agents not: >x</agents>there", /empty not: entry/],
 		[
 			"nested selector",
-			"Hi<agents:claude> nested <agents:codex> x</agents> </agents>there",
+			"Hi<agents claude> nested <agents codex> x</agents> </agents>there",
 			/Nested selector block/,
 		],
-		["unterminated tag", "Hi<agents:claude x there", /Unterminated selector block/],
-		["unterminated block", "Hi<agents:claude> x", /Unterminated selector block/],
-		["missing content", "Hi<agents:claude></agents>", /missing content/],
+		["unterminated tag", "Hi<agents claude x there", /Unterminated selector block/],
+		["unterminated block", "Hi<agents claude> x", /Unterminated selector block/],
+		["missing content", "Hi<agents claude></agents>", /missing content/],
 		[
 			"include/exclude conflict",
-			"Hi<agents:claude,not:claude> x</agents>there",
+			"Hi<agents claude,not:claude> x</agents>there",
 			/includes and excludes/,
 		],
 	])("throws for %s", (_label, content, pattern) => {

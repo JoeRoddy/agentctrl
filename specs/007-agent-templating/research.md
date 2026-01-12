@@ -2,11 +2,11 @@
 
 ## Decisions
 
-- **Decision**: Use tag-style block syntax `<agents:selector-list> ... </agents>` with include/exclude selectors.
+- **Decision**: Use tag-style block syntax `<agents selector-list> ... </agents>` with include/exclude selectors.
   - **Rationale**: Avoids collisions with common `{}` usage while keeping inline placement flexible.
   - **Alternatives considered**: Single-brace inline syntax, double-bracket tags, line-based tags.
 
-- **Decision**: Use `not:` prefix for exclusions inside the selector list (e.g., `<agents:not:claude,gemini> ... </agents>`).
+- **Decision**: Use `not:` prefix for exclusions inside the selector list (e.g., `<agents not:claude,gemini> ... </agents>`).
   - **Rationale**: Clear and readable exclusion marker that aligns with the example.
   - **Alternatives considered**: `!` prefix, `exclude:` keyword.
 

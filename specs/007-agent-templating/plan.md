@@ -8,7 +8,7 @@
 ## Summary
 
 Add agent-scoped templating blocks that can appear anywhere in syncable files, using a
-tag-style `<agents:selector-list> ... </agents>` syntax with include/exclude selectors. The compiler must apply
+tag-style `<agents selector-list> ... </agents>` syntax with include/exclude selectors. The compiler must apply
 selectors consistently across all syncable features, fail fast on invalid selectors, and
 document the universal support in AGENTS.md and other syncable feature docs.
 
@@ -69,7 +69,7 @@ tests/
 
 ### Research Tasks
 
-- Decision: tag-style block syntax `<agents:selector-list> ... </agents>` with `not:` exclusions.
+- Decision: tag-style block syntax `<agents selector-list> ... </agents>` with `not:` exclusions.
   - Rationale: avoids collisions with common `{}` usage while keeping inline include/exclude semantics.
   - Alternatives considered: single-brace inline syntax, double-bracket tags, line-based tags.
 - Decision: block ends at first unescaped `</agents>` and supports `\</agents>` inside content.

@@ -29,7 +29,7 @@ type SelectorSets = {
 	raw: string;
 };
 
-const OPEN_TAG = "<agents:";
+const OPEN_TAG = "<agents ";
 const CLOSE_TAG = "</agents>";
 
 function normalizeAgentList(validAgents: string[]): string[] {

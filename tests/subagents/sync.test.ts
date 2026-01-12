@@ -150,7 +150,7 @@ describe.sequential("subagent sync", () => {
 			await writeSubagent(
 				root,
 				"templated",
-				"Hello<agents:claude> CLAUDE</agents><agents:not:claude> OTHER</agents>",
+				"Hello<agents claude> CLAUDE</agents><agents not:claude> OTHER</agents>",
 			);
 
 			const plan = await planSubagentSync({
@@ -174,7 +174,7 @@ describe.sequential("subagent sync", () => {
 			await writeSubagent(
 				root,
 				"templated-skill",
-				"Hello<agents:codex> CODEX</agents><agents:not:codex> OTHER</agents>",
+				"Hello<agents codex> CODEX</agents><agents not:codex> OTHER</agents>",
 			);
 
 			const plan = await planSubagentSync({

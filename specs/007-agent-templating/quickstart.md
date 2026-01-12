@@ -6,7 +6,7 @@ Use a tag-style block with a selector list followed by content:
 
 ```text
 Regular text
-<agents:claude,codex>This text is only for Claude and Codex</agents>
+<agents claude,codex>This text is only for Claude and Codex</agents>
 More text
 ```
 
@@ -15,7 +15,7 @@ More text
 Use the `not:` prefix to exclude agents:
 
 ```text
-<agents:not:claude,gemini>This text is for all agents except Claude and Gemini</agents>
+<agents not:claude,gemini>This text is for all agents except Claude and Gemini</agents>
 ```
 
 ## Multi-line blocks
@@ -23,7 +23,7 @@ Use the `not:` prefix to exclude agents:
 Blocks can span multiple lines until the closing `</agents>`:
 
 ```text
-<agents:claude,codex>
+<agents claude,codex>
 Line 1
 Line 2
 </agents>
@@ -34,7 +34,7 @@ Line 2
 Use `\</agents>` for literal closing tags inside content:
 
 ```text
-<agents:codex>
+<agents codex>
 This is a literal closing tag: \</agents>
 </agents>
 ```
