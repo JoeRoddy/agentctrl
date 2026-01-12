@@ -26,8 +26,7 @@ describe("agent templating", () => {
 	});
 
 	it("supports not: exclusions and case-insensitive matching", () => {
-		const content =
-			"A<agents:not:claude,gemini> skip</agents>B<agents:ClAuDe> keep</agents>C";
+		const content = "A<agents:not:claude,gemini> skip</agents>B<agents:ClAuDe> keep</agents>C";
 		const claudeOutput = applyAgentTemplating({
 			content,
 			target: "claude",
