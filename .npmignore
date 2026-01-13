@@ -9,9 +9,11 @@ scripts/
 .claude/
 .codex/
 .specify/
+.gemini/
 
 # VCS and editor
 .git/
+.github/
 .vscode/
 .idea/
 
@@ -22,6 +24,9 @@ scripts/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Generated artifacts
+coverage/
 
 # Locks (not needed in published package)
 package-lock.json
