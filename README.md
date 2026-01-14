@@ -20,9 +20,6 @@ Right now, omniagent focuses on **skills**, **subagents**, and **slash commands*
 - `omniagent sync` copies skills, syncs subagents to Claude Code (and converts to skills for other
   targets), and maps slash commands into each supported target's expected location
 
-All syncable Markdown files can include `targets` or `targetAgents` in frontmatter to scope
-default sync targets (values: `claude`, `gemini`, `codex`, `copilot`).
-
 ## Supported targets (current)
 
 - Claude Code (skills + slash commands + subagents, project/global)
@@ -58,16 +55,37 @@ Example outputs:
 .gemini/skills/release-helper/SKILL.md
 ```
 
+## Custom Frontmatter Config
+
+Syncable Markdown files (skills, subagents, slash commands) can include YAML frontmatter for
+metadata and targeting. Common keys:
+
+- `targets` or `targetAgents`: single value or list; case-insensitive. Values: `claude`, `gemini`,
+  `codex`, `copilot`. These defaults can be overridden per run with `--only` or filtered with
+  `--skip`.
+- `name`: overrides the filename (when supported).
+- `description`: optional metadata (when supported).
+
+Example:
+
+```yaml
+---
+name: release-helper
+description: 'Help draft release plans and checklists.'
+targets:
+  - claude
+  - gemini
+---
+```
+
 ## Skills
 
 Canonical skills live in `agents/skills/` (each skill folder contains `SKILL.md`).
-Frontmatter in `SKILL.md` can include `targets` or `targetAgents` to scope where the skill syncs.
 
 ## Slash commands
 
 Slash commands are Markdown files in `agents/commands/`. The filename is the command name. Optional
-YAML frontmatter can include metadata like `description` and can scope targets via `targets` or
-`targetAgents` (values: `claude`, `gemini`, `codex`, `copilot`). By default, commands sync to all
+YAML frontmatter can include metadata like `description`. By default, commands sync to all
 supported targets.
 
 ## Subagents
@@ -76,8 +94,6 @@ Subagents are Markdown files in `agents/agents/` using the Claude Code subagent 
 frontmatter + prompt body). The `name` frontmatter field overrides the filename; if omitted, the
 filename (without `.md`) is used. Non-Claude targets receive converted skills at
 `.target/skills/<name>/SKILL.md`.
-Frontmatter can include `targets` or `targetAgents` to scope where the subagent (or converted
-skill) syncs.
 
 ## Agent Scoped Templating
 
