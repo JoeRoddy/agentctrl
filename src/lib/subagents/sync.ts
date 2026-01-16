@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { applyAgentTemplating } from "../agent-templating.js";
-import { normalizeName } from "../catalog-utils.js";
+import { listSkillDirectories, normalizeName, type SkillDirectoryEntry } from "../catalog-utils.js";
 import { stripFrontmatterFields } from "../frontmatter-strip.js";
 import { stripLocalPathSuffix } from "../local-sources.js";
 import { SUPPORTED_AGENT_NAMES } from "../supported-targets.js";
@@ -170,43 +170,6 @@ function buildSourceCounts(
 		}
 	}
 	return counts;
-}
-
-type SkillDirectoryEntry = {
-	directoryPath: string;
-	sharedSkillFile: string | null;
-	localSkillFile: string | null;
-};
-
-async function listSkillDirectories(root: string): Promise<SkillDirectoryEntry[]> {
-	const entries = await readdir(root, { withFileTypes: true });
-	const directories: SkillDirectoryEntry[] = [];
-	let sharedSkillFile: string | null = null;
-	let localSkillFile: string | null = null;
-
-	for (const entry of entries) {
-		if (entry.isFile() && entry.name.toLowerCase() === "skill.md") {
-			sharedSkillFile = entry.name;
-		} else if (entry.isFile() && entry.name.toLowerCase() === "skill.local.md") {
-			localSkillFile = entry.name;
-		}
-	}
-
-	if (sharedSkillFile || localSkillFile) {
-		directories.push({
-			directoryPath: root,
-			sharedSkillFile,
-			localSkillFile,
-		});
-	}
-
-	for (const entry of entries) {
-		if (entry.isDirectory()) {
-			directories.push(...(await listSkillDirectories(path.join(root, entry.name))));
-		}
-	}
-
-	return directories;
 }
 
 type CanonicalSkillIndexOptions = {

@@ -1,6 +1,6 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { readDirectoryStats } from "../catalog-utils.js";
+import { listSkillDirectories, readDirectoryStats } from "../catalog-utils.js";
 import {
 	buildSourceMetadata,
 	type LocalMarkerType,
@@ -49,47 +49,6 @@ export type SkillCatalog = {
 export type LoadSkillCatalogOptions = {
 	includeLocal?: boolean;
 };
-
-type SkillDirectoryEntry = {
-	directoryPath: string;
-	sharedSkillFile: string | null;
-	localSkillFile: string | null;
-};
-
-async function listSkillDirectories(root: string): Promise<SkillDirectoryEntry[]> {
-	const entries = await readdir(root, { withFileTypes: true });
-	const directories: SkillDirectoryEntry[] = [];
-	let sharedSkillFile: string | null = null;
-	let localSkillFile: string | null = null;
-
-	for (const entry of entries) {
-		if (!entry.isFile()) {
-			continue;
-		}
-		const lowerName = entry.name.toLowerCase();
-		if (lowerName === "skill.md") {
-			sharedSkillFile = entry.name;
-		} else if (lowerName === "skill.local.md") {
-			localSkillFile = entry.name;
-		}
-	}
-
-	if (sharedSkillFile || localSkillFile) {
-		directories.push({
-			directoryPath: root,
-			sharedSkillFile,
-			localSkillFile,
-		});
-	}
-
-	for (const entry of entries) {
-		if (entry.isDirectory()) {
-			directories.push(...(await listSkillDirectories(path.join(root, entry.name))));
-		}
-	}
-
-	return directories;
-}
 
 function resolveSkillName(frontmatter: Record<string, FrontmatterValue>, fallback: string): string {
 	const rawName = frontmatter.name;

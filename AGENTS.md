@@ -10,7 +10,7 @@ Auto-generated from all feature plans. Last updated: 2026-01-10
 - Filesystem (repo-local config + target directories) (006-add-custom-subagents)
 - TypeScript 5.9 (ES2022) on Node.js 18+ + yargs, Node.js `fs/promises`, `path`, Vitest, Vite, Biome (007-agent-templating)
 - Filesystem (repo-local config + target directories + user home config) (007-agent-templating)
-- Filesystem (repo-local agents/ directories and user home state under (009-local-config-sync)
+- Filesystem (repo-local agents/ directories and user home state under `~/.omniagent/state/`) (009-local-config-sync)
 
 - TypeScript 5.x, ES2022 target + yargs (CLI parsing), Vitest (testing), Vite (build), Biome (formatting/linting) (003-biome-integration)
 
