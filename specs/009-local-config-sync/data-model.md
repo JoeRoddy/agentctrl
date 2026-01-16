@@ -10,7 +10,8 @@ Represents a single skill, agent, or command in shared or local sources.
   - `sourceType` (enum): `shared`, `local`.
   - `sourcePath` (string): Absolute or repo-relative origin path.
   - `contentHash` (string): Hash used for change detection.
-  - `isLocalFallback` (boolean): True when sourced via `.local` filename suffix.
+  - `isLocalFallback` (boolean): True when sourced via a `.local` suffix (file or
+    skill directory).
 
 - **Relationships**:
   - Belongs to one **Sync Run**.
@@ -21,7 +22,8 @@ Describes how an item was designated as local.
 
 - **Fields**:
   - `markerType` (enum): `path`, `suffix`.
-  - `path` (string): `agents/.local/...` directory or filename with `.local`.
+  - `path` (string): `agents/.local/...` directory or filename/directory with
+    `.local`.
 
 - **Relationships**:
   - Applies to one or more **Config Items**.
@@ -49,7 +51,7 @@ Represents a single invocation of `omniagent sync`.
 Captures the proposed ignore rules and user decision.
 
 - **Fields**:
-  - `rules` (string[]): `agents/.local/`, `**/*.local.md`.
+  - `rules` (string[]): `agents/.local/`, `**/*.local/`, `**/*.local.md`.
   - `decision` (enum): `accepted`, `declined`, `notShown`.
 
 - **Relationships**:

@@ -8,14 +8,15 @@ config in the repo, keep personal/local config out of the repo, and make sync be
 sensibly by default with easy overrides. Shared (team, committed): agents/skills/,
 agents/agents/, agents/commands/. Local (personal, not committed):
 agents/.local/skills/, agents/.local/agents/, agents/.local/commands/. Secondary
-option: file-level .local suffix (e.g., SKILL.local.md, deploy.local.md) as a
-fallback. Default behavior: omniagent sync includes shared + local and reports
-local counts. Exclude local when needed: omniagent sync --exclude-local for shared
-only; --exclude-local=skills,commands to exclude some categories. Local is a source
-marker only: outputs are clean (no .local). If local matches shared by name, local
-wins when included. When local is present, tool can offer to add ignore rules for
-agents/.local/ and **/*.local.md. omniagent sync --list-local shows which files are
-considered local."
+option: .local suffixes as a fallback (skill directory suffixes like
+review-helper.local/SKILL.md, or file-level suffixes like SKILL.local.md,
+deploy.local.md). Default behavior: omniagent sync includes shared + local and
+reports local counts. Exclude local when needed: omniagent sync --exclude-local
+for shared only; --exclude-local=skills,commands to exclude some categories. Local
+is a source marker only: outputs are clean (no .local). If local matches shared by
+name, local wins when included. When local is present, tool can offer to add ignore
+rules for agents/.local/, **/*.local/, and **/*.local.md. omniagent sync --list-local
+shows which files are considered local."
 
 ## Clarifications
 
@@ -51,9 +52,9 @@ verify local content is applied and outputs are normalized without .local.
    the output filename contains no ".local" marker.
 2. **Given** local items are present, **When** I run `omniagent sync`, **Then** the
    summary reports how many local items were applied.
-3. **Given** the same local item exists in agents/.local/ and as a .local filename
-   suffix, **When** I run `omniagent sync`, **Then** the agents/.local/ version is
-   used in outputs.
+3. **Given** the same local item exists in agents/.local/ and as a .local suffix
+   (file or skill directory), **When** I run `omniagent sync`, **Then** the
+   agents/.local/ version is used in outputs.
 
 ---
 
@@ -111,7 +112,8 @@ accept the ignore suggestion to confirm rules are added.
 ### Edge Cases
 
 - Local and shared items share the same name in multiple categories.
-- A local item exists both in agents/.local/ and as a .local filename suffix.
+- A local item exists both in agents/.local/ and as a .local suffix (file or skill
+  directory).
 - No local items exist; list-local should report none and no ignore suggestion is
   shown.
 - A user passes an unknown category in --exclude-local; the tool should report the
@@ -129,8 +131,9 @@ accept the ignore suggestion to confirm rules are added.
   agents/commands/ as shared sources.
 - **FR-002**: System MUST treat items under agents/.local/skills/,
   agents/.local/agents/, and agents/.local/commands/ as local sources.
-- **FR-003**: System MUST treat files with a .local filename suffix in shared
-  directories as local sources.
+- **FR-003**: System MUST treat .local suffixes in shared directories as local
+  sources (file-level suffixes for commands and subagents, and skill directory
+  suffixes for skills).
 - **FR-004**: System MUST include both shared and local sources by default when
   running `omniagent sync`.
 - **FR-005**: When a local item matches a shared item by name, the local item MUST
@@ -146,9 +149,9 @@ accept the ignore suggestion to confirm rules are added.
 - **FR-010**: The system MUST provide `omniagent sync --list-local` to enumerate
   all local items with their categories and source paths.
 - **FR-011**: When local items are detected and ignore rules are missing, the
-  system MUST offer to add ignore rules to the repo .gitignore for agents/.local/
-  and **/*.local.md ONLY if the user has not previously declined for that project,
-  and MUST only apply changes after explicit user confirmation.
+  system MUST offer to add ignore rules to the repo .gitignore for agents/.local/,
+  **/*.local/, and **/*.local.md ONLY if the user has not previously declined for
+  that project, and MUST only apply changes after explicit user confirmation.
 - **FR-012**: If the same local item is defined via both agents/.local/ and a
   .local filename suffix, the agents/.local/ version MUST take precedence.
 - **FR-013**: If `--exclude-local` includes an unknown category, the system MUST
@@ -165,7 +168,7 @@ accept the ignore suggestion to confirm rules are added.
 - **Config Item**: A skill, agent, or command with name, category, source type
   (shared or local), and content.
 - **Local Source Marker**: The indicator that a config item is local, either a
-  agents/.local/ path or a .local filename suffix.
+  agents/.local/ path or a .local suffix (file or skill directory).
 - **Sync Run**: One execution of sync with options and a resulting summary of
   applied items.
 - **Ignore Suggestion**: A proposed set of ignore rules and the user's decision to
@@ -191,7 +194,8 @@ accept the ignore suggestion to confirm rules are added.
 
 - Sharing or syncing local items across team members.
 - Automatic modification of ignore files without user confirmation.
-- Managing local items outside the defined directories or .local suffix.
+- Managing local items outside the defined directories or .local suffix
+  (file/directory).
 
 ## Success Criteria *(mandatory)*
 

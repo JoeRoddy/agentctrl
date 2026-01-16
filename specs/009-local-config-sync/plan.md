@@ -6,7 +6,8 @@
 ## Summary
 
 Add local config support to `omniagent sync`, including local source discovery
-(via `agents/.local/` and `.local` filename suffix), deterministic precedence,
+(via `agents/.local/` and `.local` suffixes for files or skill directories),
+deterministic precedence,
 selective exclusion, and local item listing. Include optional ignore-rule
 prompting with per-project suppression and non-interactive behavior, while
 keeping outputs normalized and summaries accurate.

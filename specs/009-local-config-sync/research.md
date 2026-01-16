@@ -2,8 +2,9 @@
 
 ## Decision 1: Source discovery and precedence
 
-- **Decision**: Treat `agents/.local/` paths and `.local` filename suffixes as
-  local sources; if both exist for the same item, prefer `agents/.local/`.
+- **Decision**: Treat `agents/.local/` paths and `.local` suffixes (file or skill
+  directory) as local sources; if both exist for the same item, prefer
+  `agents/.local/`.
 - **Rationale**: Aligns with the primary path strategy while preserving the
   filename suffix fallback and clear precedence rules.
 - **Alternatives considered**: Prefer filename suffix; merge content. Rejected to
