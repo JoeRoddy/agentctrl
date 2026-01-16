@@ -93,6 +93,18 @@ describe("local catalog detection", () => {
 		});
 	});
 
+	it("strips .local suffixes from local path skill directories", async () => {
+		await withTempRepo(async (root) => {
+			await writeSkill(root, path.join("agents", ".local", "skills"), "gamma.local", "SKILL.md");
+
+			const catalog = await loadSkillCatalog(root);
+			const localGamma = catalog.localSkills.find((skill) => skill.name === "gamma");
+
+			expect(localGamma?.relativePath).toBe("gamma");
+			expect(catalog.localSkills.some((skill) => skill.name === "gamma.local")).toBe(false);
+		});
+	});
+
 	it("classifies shared and local commands and prefers local path over suffix", async () => {
 		await withTempRepo(async (root) => {
 			await writeCommand(root, path.join("agents", "commands"), "deploy.md", "shared deploy");

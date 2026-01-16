@@ -218,6 +218,29 @@ describe.sequential("sync command local config", () => {
 		});
 	});
 
+	it("skips .local templating validation when local sources are excluded", async () => {
+		await withTempRepo(async (root) => {
+			await createRepoRoot(root);
+			await writeSharedSkill(root, "alpha", "shared alpha");
+			await writeLocalSuffixSkill(root, "alpha", "<agents bogus>bad</agents>");
+
+			await withCwd(root, async () => {
+				await runCli([
+					"node",
+					"omniagent",
+					"sync",
+					"--only",
+					"claude",
+					"--exclude-local",
+					"--yes",
+					"--json",
+				]);
+			});
+
+			expect(exitSpy).not.toHaveBeenCalled();
+		});
+	});
+
 	it("excludes local skills and commands while keeping local agents", async () => {
 		await withTempRepo(async (root) => {
 			await createRepoRoot(root);

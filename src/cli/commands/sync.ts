@@ -10,6 +10,7 @@ import {
 	DEFAULT_IGNORE_RULES,
 	getIgnoreRuleStatus,
 } from "../../lib/ignore-rules.js";
+import { isLocalSuffixFile, stripLocalPathSuffix } from "../../lib/local-sources.js";
 import { findRepoRoot } from "../../lib/repo-root.js";
 import { loadSkillCatalog } from "../../lib/skills/catalog.js";
 import { syncSkills as syncSkillTargets } from "../../lib/skills/sync.js";
@@ -296,6 +297,18 @@ async function listFiles(root: string): Promise<string[]> {
 	return files;
 }
 
+function hasLocalMarker(filePath: string): boolean {
+	const segments = filePath.split(path.sep);
+	for (const segment of segments) {
+		if (stripLocalPathSuffix(segment).hadLocalSuffix) {
+			return true;
+		}
+	}
+	const baseName = path.basename(filePath);
+	const extension = path.parse(baseName).ext;
+	return isLocalSuffixFile(baseName, extension);
+}
+
 async function validateTemplatingSources(options: {
 	repoRoot: string;
 	validAgents: string[];
@@ -342,11 +355,19 @@ async function validateTemplatingSources(options: {
 	}
 
 	for (const directory of directories) {
+		const category = path.basename(directory);
+		const excludeLocal =
+			(category === "skills" && !options.includeLocalSkills) ||
+			(category === "commands" && !options.includeLocalCommands) ||
+			(category === "agents" && !options.includeLocalAgents);
 		const files =
 			path.basename(directory) === "skills"
 				? await listFiles(directory)
 				: await listMarkdownFiles(directory);
-		for (const filePath of files) {
+		const filesToValidate = excludeLocal
+			? files.filter((filePath) => !hasLocalMarker(filePath))
+			: files;
+		for (const filePath of filesToValidate) {
 			const buffer = await readFile(filePath);
 			const contents = decodeUtf8(buffer);
 			if (contents === null) {

@@ -247,10 +247,12 @@ export async function loadSkillCatalog(
 		if (!skillFileName) {
 			continue;
 		}
+		const { relativePath } = resolveSkillRelativePath(localSkillsRoot, entry.directoryPath);
 		localPathSkills.push(
 			await buildSkillDefinition({
 				directoryPath: entry.directoryPath,
 				skillsRoot: localSkillsRoot,
+				relativePath,
 				skillFileName,
 				sourceType: "local",
 				markerType: "path",
