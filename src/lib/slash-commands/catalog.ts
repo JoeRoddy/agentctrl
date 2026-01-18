@@ -46,6 +46,7 @@ export type CommandCatalog = {
 
 export type LoadCommandCatalogOptions = {
 	includeLocal?: boolean;
+	agentsDir?: string | null;
 };
 
 async function listMarkdownFiles(root: string): Promise<string[]> {
@@ -130,8 +131,8 @@ export async function loadCommandCatalog(
 	options: LoadCommandCatalogOptions = {},
 ): Promise<CommandCatalog> {
 	const includeLocal = options.includeLocal ?? true;
-	const commandsPath = resolveSharedCategoryRoot(repoRoot, "commands");
-	const localCommandsPath = resolveLocalCategoryRoot(repoRoot, "commands");
+	const commandsPath = resolveSharedCategoryRoot(repoRoot, "commands", options.agentsDir);
+	const localCommandsPath = resolveLocalCategoryRoot(repoRoot, "commands", options.agentsDir);
 
 	const sharedStats = await readDirectoryStats(commandsPath);
 	if (sharedStats && !sharedStats.isDirectory()) {

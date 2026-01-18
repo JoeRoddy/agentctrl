@@ -64,6 +64,7 @@ async function listCatalogFiles(root: string): Promise<string[]> {
 
 export type LoadSubagentCatalogOptions = {
 	includeLocal?: boolean;
+	agentsDir?: string | null;
 };
 
 function parseScalar(rawValue: string): string {
@@ -254,8 +255,8 @@ export async function loadSubagentCatalog(
 	options: LoadSubagentCatalogOptions = {},
 ): Promise<SubagentCatalog> {
 	const includeLocal = options.includeLocal ?? true;
-	const catalogPath = resolveSharedCategoryRoot(repoRoot, "agents");
-	const localCatalogPath = resolveLocalCategoryRoot(repoRoot, "agents");
+	const catalogPath = resolveSharedCategoryRoot(repoRoot, "agents", options.agentsDir);
+	const localCatalogPath = resolveLocalCategoryRoot(repoRoot, "agents", options.agentsDir);
 
 	const sharedStats = await readDirectoryStats(catalogPath);
 	if (sharedStats && !sharedStats.isDirectory()) {

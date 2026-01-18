@@ -1,4 +1,5 @@
 import path from "node:path";
+import { resolveAgentsDirPath } from "./agents-dir.js";
 
 export type LocalCategory = "skills" | "commands" | "agents" | "instructions";
 export type SourceType = "shared" | "local";
@@ -13,18 +14,28 @@ export type SourceMetadata = {
 const LOCAL_DIRNAME = ".local";
 const LOCAL_SUFFIX = ".local";
 
-export function resolveSharedCategoryRoot(repoRoot: string, category: LocalCategory): string {
+export function resolveSharedCategoryRoot(
+	repoRoot: string,
+	category: LocalCategory,
+	agentsDir?: string | null,
+): string {
+	const agentsRoot = resolveAgentsDirPath(repoRoot, agentsDir);
 	if (category === "instructions") {
-		return path.join(repoRoot, "agents");
+		return agentsRoot;
 	}
-	return path.join(repoRoot, "agents", category);
+	return path.join(agentsRoot, category);
 }
 
-export function resolveLocalCategoryRoot(repoRoot: string, category: LocalCategory): string {
+export function resolveLocalCategoryRoot(
+	repoRoot: string,
+	category: LocalCategory,
+	agentsDir?: string | null,
+): string {
+	const agentsRoot = resolveAgentsDirPath(repoRoot, agentsDir);
 	if (category === "instructions") {
-		return path.join(repoRoot, "agents", LOCAL_DIRNAME);
+		return path.join(agentsRoot, LOCAL_DIRNAME);
 	}
-	return path.join(repoRoot, "agents", LOCAL_DIRNAME, category);
+	return path.join(agentsRoot, LOCAL_DIRNAME, category);
 }
 
 export function buildSourceMetadata(sourceType: "shared", markerType?: undefined): SourceMetadata;

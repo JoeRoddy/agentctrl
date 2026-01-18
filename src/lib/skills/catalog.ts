@@ -49,6 +49,7 @@ export type SkillCatalog = {
 
 export type LoadSkillCatalogOptions = {
 	includeLocal?: boolean;
+	agentsDir?: string | null;
 };
 
 function resolveSkillName(frontmatter: Record<string, FrontmatterValue>, fallback: string): string {
@@ -135,8 +136,8 @@ export async function loadSkillCatalog(
 	options: LoadSkillCatalogOptions = {},
 ): Promise<SkillCatalog> {
 	const includeLocal = options.includeLocal ?? true;
-	const skillsRoot = resolveSharedCategoryRoot(repoRoot, "skills");
-	const localSkillsRoot = resolveLocalCategoryRoot(repoRoot, "skills");
+	const skillsRoot = resolveSharedCategoryRoot(repoRoot, "skills", options.agentsDir);
+	const localSkillsRoot = resolveLocalCategoryRoot(repoRoot, "skills", options.agentsDir);
 
 	const sharedStats = await readDirectoryStats(skillsRoot);
 	if (sharedStats && !sharedStats.isDirectory()) {

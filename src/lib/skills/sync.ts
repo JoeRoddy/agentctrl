@@ -4,7 +4,11 @@ import { TextDecoder } from "node:util";
 import { applyAgentTemplating } from "../agent-templating.js";
 import { listSkillDirectories, type SkillDirectoryEntry } from "../catalog-utils.js";
 import { stripFrontmatterFields } from "../frontmatter-strip.js";
-import { stripLocalPathSuffix } from "../local-sources.js";
+import {
+	resolveLocalCategoryRoot,
+	resolveSharedCategoryRoot,
+	stripLocalPathSuffix,
+} from "../local-sources.js";
 import {
 	buildSummary,
 	type SyncResult,
@@ -21,6 +25,7 @@ import { loadSkillCatalog, type SkillDefinition } from "./catalog.js";
 
 export type SkillSyncRequest = {
 	repoRoot: string;
+	agentsDir?: string | null;
 	targets: TargetSpec[];
 	overrideOnly?: TargetName[] | null;
 	overrideSkip?: TargetName[] | null;
@@ -81,9 +86,12 @@ async function listSkillDirectoriesSafe(root: string): Promise<SkillDirectoryEnt
 	}
 }
 
-async function resolveLocalOnlySkillPaths(repoRoot: string): Promise<string[]> {
-	const skillsRoot = path.join(repoRoot, "agents", "skills");
-	const localSkillsRoot = path.join(repoRoot, "agents", ".local", "skills");
+async function resolveLocalOnlySkillPaths(
+	repoRoot: string,
+	agentsDir?: string | null,
+): Promise<string[]> {
+	const skillsRoot = resolveSharedCategoryRoot(repoRoot, "skills", agentsDir);
+	const localSkillsRoot = resolveLocalCategoryRoot(repoRoot, "skills", agentsDir);
 	const sharedEntries = await listSkillDirectoriesSafe(skillsRoot);
 	const localEntries = await listSkillDirectoriesSafe(localSkillsRoot);
 
@@ -235,7 +243,7 @@ function resolveEffectiveTargetsForSkill(
 }
 
 export async function syncSkills(request: SkillSyncRequest): Promise<SyncSummary> {
-	const sourcePath = path.join(request.repoRoot, "agents", "skills");
+	const sourcePath = resolveSharedCategoryRoot(request.repoRoot, "skills", request.agentsDir);
 	if (request.targets.length === 0) {
 		return buildSummary(sourcePath, [], [], {
 			shared: 0,
@@ -246,6 +254,7 @@ export async function syncSkills(request: SkillSyncRequest): Promise<SyncSummary
 
 	const catalog = await loadSkillCatalog(request.repoRoot, {
 		includeLocal: !request.excludeLocal,
+		agentsDir: request.agentsDir,
 	});
 	const warnings = buildInvalidTargetWarnings(catalog.skills);
 	const effectiveTargetsBySkill = new Map<SkillDefinition, TargetName[]>();
@@ -278,7 +287,9 @@ export async function syncSkills(request: SkillSyncRequest): Promise<SyncSummary
 	const sourceDisplay = formatDisplayPath(request.repoRoot, sourcePath);
 	const removeMissing = request.removeMissing ?? false;
 	const localOnlyPaths =
-		request.excludeLocal && removeMissing ? await resolveLocalOnlySkillPaths(request.repoRoot) : [];
+		request.excludeLocal && removeMissing
+			? await resolveLocalOnlySkillPaths(request.repoRoot, request.agentsDir)
+			: [];
 
 	for (const target of request.targets) {
 		const destPath = path.join(request.repoRoot, target.relativePath);

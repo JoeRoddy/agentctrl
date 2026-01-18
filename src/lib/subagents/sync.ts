@@ -5,7 +5,11 @@ import path from "node:path";
 import { applyAgentTemplating } from "../agent-templating.js";
 import { listSkillDirectories, normalizeName, type SkillDirectoryEntry } from "../catalog-utils.js";
 import { stripFrontmatterFields } from "../frontmatter-strip.js";
-import { stripLocalPathSuffix } from "../local-sources.js";
+import {
+	resolveLocalCategoryRoot,
+	resolveSharedCategoryRoot,
+	stripLocalPathSuffix,
+} from "../local-sources.js";
 import { SUPPORTED_AGENT_NAMES } from "../supported-targets.js";
 import type { SyncSourceCounts } from "../sync-results.js";
 import { resolveEffectiveTargets } from "../sync-targets.js";
@@ -27,6 +31,7 @@ import {
 
 export type SubagentSyncRequest = {
 	repoRoot: string;
+	agentsDir?: string | null;
 	targets?: SubagentTargetName[];
 	overrideOnly?: SubagentTargetName[] | null;
 	overrideSkip?: SubagentTargetName[] | null;
@@ -174,6 +179,7 @@ function buildSourceCounts(
 
 type CanonicalSkillIndexOptions = {
 	includeLocal?: boolean;
+	agentsDir?: string | null;
 };
 
 async function loadCanonicalSkillIndex(
@@ -181,8 +187,8 @@ async function loadCanonicalSkillIndex(
 	options: CanonicalSkillIndexOptions = {},
 ): Promise<Map<string, string>> {
 	const includeLocal = options.includeLocal ?? true;
-	const skillsRoot = path.join(repoRoot, "agents", "skills");
-	const localSkillsRoot = path.join(repoRoot, "agents", ".local", "skills");
+	const skillsRoot = resolveSharedCategoryRoot(repoRoot, "skills", options.agentsDir);
+	const localSkillsRoot = resolveLocalCategoryRoot(repoRoot, "skills", options.agentsDir);
 	let directories: SkillDirectoryEntry[] = [];
 	try {
 		directories = await listSkillDirectories(skillsRoot);
@@ -583,9 +589,11 @@ export async function planSubagentSync(
 ): Promise<SubagentSyncPlanDetails> {
 	const catalog = await loadSubagentCatalog(request.repoRoot, {
 		includeLocal: !request.excludeLocal,
+		agentsDir: request.agentsDir,
 	});
 	const canonicalSkills = await loadCanonicalSkillIndex(request.repoRoot, {
 		includeLocal: request.includeLocalSkills ?? true,
+		agentsDir: request.agentsDir,
 	});
 	const selectedTargets =
 		request.targets && request.targets.length > 0

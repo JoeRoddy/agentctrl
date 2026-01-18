@@ -107,6 +107,9 @@ agents/
 AGENTS.md        # repo-wide instructions (optional)
 ```
 
+Default agents directory is `agents/`. Override it with `--agentsDir` (relative to the project
+root, or an absolute path).
+
 ## Use cases
 
 - **Keep a team-wide review assistant consistent** while each person uses their preferred tool.
@@ -179,6 +182,7 @@ npx omniagent@latest sync --only claude
 npx omniagent@latest sync --skip codex
 npx omniagent@latest sync --exclude-local
 npx omniagent@latest sync --exclude-local=skills,commands
+npx omniagent@latest sync --agentsDir ./my-custom-agents
 npx omniagent@latest sync --list-local
 npx omniagent@latest sync --yes
 npx omniagent@latest sync --json
@@ -190,4 +194,5 @@ Run-level overrides:
 - `--skip` filters the active target set (frontmatter defaults or all targets).
 - `--exclude-local` omits local sources entirely (or only for the listed categories).
 - `--list-local` prints detected local items and exits.
+- `--agentsDir` points to the agents directory (default `agents/`, resolved from the repo root).
 - If both are provided, `--only` applies first, then `--skip`.
