@@ -2,9 +2,9 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import {
 	buildSourceMetadata,
+	detectLocalMarkerFromPath,
 	type LocalMarkerType,
 	type SourceType,
-	detectLocalMarkerFromPath,
 	stripLocalSuffix,
 } from "../local-sources.js";
 
