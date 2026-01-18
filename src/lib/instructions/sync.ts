@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { applyAgentTemplating } from "../agent-templating.js";
+import { resolveAgentsDirPath } from "../agents-dir.js";
 import { resolveLocalPrecedence } from "../local-precedence.js";
 import type { SyncSourceCounts } from "../sync-results.js";
 import { resolveEffectiveTargets, TARGETS } from "../sync-targets.js";
@@ -30,6 +31,7 @@ import type {
 
 export type InstructionSyncRequest = {
 	repoRoot: string;
+	agentsDir?: string | null;
 	targets: InstructionTargetName[];
 	overrideOnly?: InstructionTargetName[] | null;
 	overrideSkip?: InstructionTargetName[] | null;
@@ -142,10 +144,12 @@ function selectCandidate(
 async function loadRepoSources(options: {
 	repoRoot: string;
 	includeLocal: boolean;
+	agentsDir?: string | null;
 }): Promise<InstructionRepoSource[]> {
 	const entries = await scanRepoInstructionSources({
 		repoRoot: options.repoRoot,
 		includeLocal: options.includeLocal,
+		agentsDir: options.agentsDir,
 	});
 	const sources: InstructionRepoSource[] = [];
 	for (const entry of entries) {
@@ -228,6 +232,9 @@ export async function syncInstructions(
 	const selectedTargets = new Set(request.targets);
 	const includeLocal = !(request.excludeLocal ?? false);
 	const summarySourcePath = request.repoRoot;
+	const agentsRoot = resolveAgentsDirPath(request.repoRoot, request.agentsDir);
+	const rootTemplatePath = path.join(agentsRoot, "AGENTS.md");
+	const rootTemplateDisplay = formatDisplayPath(request.repoRoot, rootTemplatePath);
 	const warnings: string[] = [];
 	const primaryAgentsTarget: InstructionTargetName | null = selectedTargets.has("codex")
 		? "codex"
@@ -250,8 +257,16 @@ export async function syncInstructions(
 	}
 
 	const [templateCatalog, repoSources] = await Promise.all([
-		loadInstructionTemplateCatalog({ repoRoot: request.repoRoot, includeLocal }),
-		loadRepoSources({ repoRoot: request.repoRoot, includeLocal }),
+		loadInstructionTemplateCatalog({
+			repoRoot: request.repoRoot,
+			includeLocal,
+			agentsDir: request.agentsDir,
+		}),
+		loadRepoSources({
+			repoRoot: request.repoRoot,
+			includeLocal,
+			agentsDir: request.agentsDir,
+		}),
 	]);
 
 	const validTemplates: InstructionTemplateSource[] = [];
@@ -259,7 +274,7 @@ export async function syncInstructions(
 		if (!template.resolvedOutputDir) {
 			const display = formatDisplayPath(request.repoRoot, template.sourcePath);
 			warnings.push(
-				`Instruction template missing outPutPath (required outside agents/AGENTS.md): ${display}.`,
+				`Instruction template missing outPutPath (required outside ${rootTemplateDisplay}): ${display}.`,
 			);
 			continue;
 		}

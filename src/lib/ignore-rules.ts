@@ -1,12 +1,27 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveAgentsDirRelativePath } from "./agents-dir.js";
 
-export const DEFAULT_IGNORE_RULES = ["agents/.local/", "**/*.local/", "**/*.local.md"] as const;
+export const LOCAL_OVERRIDE_IGNORE_RULES = ["**/*.local/", "**/*.local.md"] as const;
 
 export type IgnoreRuleStatus = {
 	ignoreFilePath: string;
 	missingRules: string[];
 };
+
+type IgnoreRuleOptions = {
+	agentsDir?: string | null;
+	rules?: string[];
+};
+
+export function buildAgentsIgnoreRules(repoRoot: string, agentsDir?: string | null): string[] {
+	const relativeAgentsDir = resolveAgentsDirRelativePath(repoRoot, agentsDir);
+	if (relativeAgentsDir === null) {
+		return [...LOCAL_OVERRIDE_IGNORE_RULES];
+	}
+	const localRootRule = relativeAgentsDir ? `${relativeAgentsDir}/.local/` : ".local/";
+	return [localRootRule, ...LOCAL_OVERRIDE_IGNORE_RULES];
+}
 
 function normalizeRule(rule: string): string {
 	return rule.trim();
@@ -30,8 +45,9 @@ function hasRule(lines: string[], rule: string): boolean {
 
 export async function getIgnoreRuleStatus(
 	repoRoot: string,
-	rules: string[] = [...DEFAULT_IGNORE_RULES],
+	options: IgnoreRuleOptions = {},
 ): Promise<IgnoreRuleStatus> {
+	const rules = options.rules ?? buildAgentsIgnoreRules(repoRoot, options.agentsDir);
 	const ignoreFilePath = path.join(repoRoot, ".gitignore");
 	let contents = "";
 	try {
@@ -56,8 +72,9 @@ export async function getIgnoreRuleStatus(
 
 export async function appendIgnoreRules(
 	repoRoot: string,
-	rules: string[] = [...DEFAULT_IGNORE_RULES],
+	options: IgnoreRuleOptions = {},
 ): Promise<IgnoreRuleStatus> {
+	const rules = options.rules ?? buildAgentsIgnoreRules(repoRoot, options.agentsDir);
 	const ignoreFilePath = path.join(repoRoot, ".gitignore");
 	let contents = "";
 	try {

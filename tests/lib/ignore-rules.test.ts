@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import {
 	appendIgnoreRules,
-	DEFAULT_IGNORE_RULES,
+	buildAgentsIgnoreRules,
 	getIgnoreRuleStatus,
 } from "../../src/lib/ignore-rules.js";
 
@@ -19,18 +19,19 @@ async function withTempRepo(fn: (root: string) => Promise<void>): Promise<void> 
 describe("ignore rule helpers", () => {
 	it("reports missing rules and appends them when requested", async () => {
 		await withTempRepo(async (root) => {
-			const status = await getIgnoreRuleStatus(root);
+			const rules = buildAgentsIgnoreRules(root);
+			const status = await getIgnoreRuleStatus(root, { rules });
 			expect(status.ignoreFilePath).toBe(path.join(root, ".gitignore"));
-			expect(status.missingRules).toEqual([...DEFAULT_IGNORE_RULES]);
+			expect(status.missingRules).toEqual([...rules]);
 
-			await appendIgnoreRules(root);
+			await appendIgnoreRules(root, { rules });
 			const contents = await readFile(path.join(root, ".gitignore"), "utf8");
 			expect(contents).toContain("# omniagent local overrides");
-			for (const rule of DEFAULT_IGNORE_RULES) {
+			for (const rule of rules) {
 				expect(contents).toContain(rule);
 			}
 
-			const updated = await getIgnoreRuleStatus(root);
+			const updated = await getIgnoreRuleStatus(root, { rules });
 			expect(updated.missingRules).toEqual([]);
 		});
 	});
@@ -38,13 +39,14 @@ describe("ignore rule helpers", () => {
 	it("does not duplicate existing ignore rules", async () => {
 		await withTempRepo(async (root) => {
 			const ignorePath = path.join(root, ".gitignore");
-			const initial = "# existing\nagents/.local\n**/*.local/\n**/*.local.md\n";
+			const rules = buildAgentsIgnoreRules(root);
+			const initial = `${["# existing", ...rules].join("\n")}\n`;
 			await writeFile(ignorePath, initial, "utf8");
 
-			const status = await getIgnoreRuleStatus(root);
+			const status = await getIgnoreRuleStatus(root, { rules });
 			expect(status.missingRules).toEqual([]);
 
-			await appendIgnoreRules(root);
+			await appendIgnoreRules(root, { rules });
 			const contents = await readFile(ignorePath, "utf8");
 			expect(contents).toBe(initial);
 		});

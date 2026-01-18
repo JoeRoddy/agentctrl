@@ -26,7 +26,7 @@ description: "Task list template for feature implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create shared agents directory helper with default constant in `src/lib/agents-dir.ts`
+- [X] T001 Create shared agents directory helper with default constant in `src/lib/agents-dir.ts`
 
 ---
 
@@ -36,8 +36,8 @@ description: "Task list template for feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Update `src/lib/local-sources.ts` to resolve shared/local roots from a passed-in agents directory
-- [ ] T003 Update `src/lib/ignore-rules.ts` to build ignore rules from the agents directory instead of hardcoded `agents/`
+- [X] T002 Update `src/lib/local-sources.ts` to resolve shared/local roots from a passed-in agents directory
+- [X] T003 Update `src/lib/ignore-rules.ts` to build ignore rules from the agents directory instead of hardcoded `agents/`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -51,11 +51,11 @@ description: "Task list template for feature implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T004 [P] [US1] Add `agentsDir` option plumbing to skills catalog/sync in `src/lib/skills/catalog.ts` and `src/lib/skills/sync.ts`
-- [ ] T005 [P] [US1] Add `agentsDir` option plumbing to slash command catalog/sync in `src/lib/slash-commands/catalog.ts` and `src/lib/slash-commands/sync.ts`
-- [ ] T006 [P] [US1] Add `agentsDir` option plumbing to subagent catalog/sync in `src/lib/subagents/catalog.ts` and `src/lib/subagents/sync.ts`
-- [ ] T007 [P] [US1] Add `agentsDir` option plumbing to instruction catalog/scan/sync in `src/lib/instructions/catalog.ts`, `src/lib/instructions/scan.ts`, and `src/lib/instructions/sync.ts`
-- [ ] T008 [US1] Resolve default agents directory and replace hardcoded `agents/` joins in `src/cli/commands/sync.ts`
+- [X] T004 [P] [US1] Add `agentsDir` option plumbing to skills catalog/sync in `src/lib/skills/catalog.ts` and `src/lib/skills/sync.ts`
+- [X] T005 [P] [US1] Add `agentsDir` option plumbing to slash command catalog/sync in `src/lib/slash-commands/catalog.ts` and `src/lib/slash-commands/sync.ts`
+- [X] T006 [P] [US1] Add `agentsDir` option plumbing to subagent catalog/sync in `src/lib/subagents/catalog.ts` and `src/lib/subagents/sync.ts`
+- [X] T007 [P] [US1] Add `agentsDir` option plumbing to instruction catalog/scan/sync in `src/lib/instructions/catalog.ts`, `src/lib/instructions/scan.ts`, and `src/lib/instructions/sync.ts`
+- [X] T008 [US1] Resolve default agents directory and replace hardcoded `agents/` joins in `src/cli/commands/sync.ts`
 
 **Checkpoint**: User Story 1 should be fully functional and testable independently
 
@@ -69,9 +69,9 @@ description: "Task list template for feature implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Add `agentsDir` to `SyncArgs` and yargs options in `src/cli/commands/sync.ts` with default `agents/` described
-- [ ] T010 [US2] Extend `src/lib/agents-dir.ts` to resolve overrides (relative to repo root) and return validation errors
-- [ ] T011 [US2] Validate `--agentsDir` override and surface clear errors in `src/cli/commands/sync.ts`, then pass resolved path to all sync flows
+- [X] T009 [US2] Add `agentsDir` to `SyncArgs` and yargs options in `src/cli/commands/sync.ts` with default `agents/` described
+- [X] T010 [US2] Extend `src/lib/agents-dir.ts` to resolve overrides (relative to repo root) and return validation errors
+- [X] T011 [US2] Validate `--agentsDir` override and surface clear errors in `src/cli/commands/sync.ts`, then pass resolved path to all sync flows
 
 **Checkpoint**: User Stories 1 AND 2 should now work independently
 
@@ -85,8 +85,8 @@ description: "Task list template for feature implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Add `--agentsDir` usage example and description in `src/cli/commands/sync.ts`
-- [ ] T013 [P] [US3] Document `--agentsDir` in `README.md` (usage section, default path, relative resolution base)
+- [X] T012 [US3] Add `--agentsDir` usage example and description in `src/cli/commands/sync.ts`
+- [X] T013 [P] [US3] Document `--agentsDir` in `README.md` (usage section, default path, relative resolution base)
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -96,7 +96,7 @@ description: "Task list template for feature implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T014 [P] Verify quickstart instructions against actual CLI behavior and adjust `README.md` if needed
+- [X] T014 [P] Verify quickstart instructions against actual CLI behavior and adjust `README.md` if needed
 
 ---
 

@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveAgentsDirPath } from "../agents-dir.js";
 import {
 	buildSourceMetadata,
 	detectLocalMarkerFromPath,
@@ -59,9 +60,10 @@ async function listTemplateFiles(root: string): Promise<string[]> {
 export async function scanInstructionTemplateSources(options: {
 	repoRoot: string;
 	includeLocal?: boolean;
+	agentsDir?: string | null;
 }): Promise<InstructionTemplateScanEntry[]> {
 	const includeLocal = options.includeLocal ?? true;
-	const templatesRoot = path.join(options.repoRoot, "agents");
+	const templatesRoot = resolveAgentsDirPath(options.repoRoot, options.agentsDir);
 	let templateFiles: string[] = [];
 
 	try {
@@ -89,8 +91,8 @@ export async function scanInstructionTemplateSources(options: {
 	return entries;
 }
 
-function isRootTemplate(filePath: string, repoRoot: string): boolean {
-	const sharedRoot = path.join(repoRoot, "agents");
+function isRootTemplate(filePath: string, repoRoot: string, agentsDir?: string | null): boolean {
+	const sharedRoot = resolveAgentsDirPath(repoRoot, agentsDir);
 	const localRoot = path.join(sharedRoot, ".local");
 	const relativeToLocal = path.relative(localRoot, filePath);
 	const isInLocalRoot =
@@ -111,8 +113,9 @@ function isRootTemplate(filePath: string, repoRoot: string): boolean {
 export async function loadInstructionTemplateCatalog(options: {
 	repoRoot: string;
 	includeLocal?: boolean;
+	agentsDir?: string | null;
 }): Promise<InstructionTemplateCatalog> {
-	const templatesRoot = path.join(options.repoRoot, "agents");
+	const templatesRoot = resolveAgentsDirPath(options.repoRoot, options.agentsDir);
 	const localTemplatesRoot = path.join(templatesRoot, ".local");
 	const entries = await scanInstructionTemplateSources(options);
 
@@ -125,7 +128,7 @@ export async function loadInstructionTemplateCatalog(options: {
 			repoRoot: options.repoRoot,
 		});
 
-		const rootTemplate = isRootTemplate(entry.sourcePath, options.repoRoot);
+		const rootTemplate = isRootTemplate(entry.sourcePath, options.repoRoot, options.agentsDir);
 		const resolvedOutputDir = parsed.resolvedOutputDir ?? (rootTemplate ? options.repoRoot : null);
 
 		templates.push({

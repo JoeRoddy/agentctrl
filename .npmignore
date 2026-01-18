@@ -10,6 +10,7 @@ scripts/
 .codex/
 .specify/
 .gemini/
+node_modules/
 
 # VCS and editor
 .git/

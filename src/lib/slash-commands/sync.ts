@@ -38,6 +38,7 @@ export type CodexConversionScope = "global" | "project" | "skip";
 
 export type SyncRequest = {
 	repoRoot: string;
+	agentsDir?: string | null;
 	targets?: TargetName[];
 	overrideOnly?: TargetName[] | null;
 	overrideSkip?: TargetName[] | null;
@@ -863,6 +864,7 @@ async function buildTargetPlan(
 export async function planSlashCommandSync(request: SyncRequest): Promise<SyncPlanDetails> {
 	const catalog = await loadCommandCatalog(request.repoRoot, {
 		includeLocal: !request.excludeLocal,
+		agentsDir: request.agentsDir,
 	});
 	const selectedTargets =
 		request.targets && request.targets.length > 0

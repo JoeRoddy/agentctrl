@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveAgentsDirRelativePath } from "../agents-dir.js";
 import {
 	buildSourceMetadata,
 	detectLocalMarkerFromPath,
@@ -163,24 +164,37 @@ async function loadIgnoreRules(repoRoot: string): Promise<IgnoreRule[]> {
 export async function scanRepoInstructionSources(options: {
 	repoRoot: string;
 	includeLocal?: boolean;
+	agentsDir?: string | null;
 }): Promise<RepoInstructionFile[]> {
 	const includeLocal = options.includeLocal ?? true;
 	const rules = await loadIgnoreRules(options.repoRoot);
 	const shouldIgnore = buildIgnoreMatcher(rules);
 	const sources: RepoInstructionFile[] = [];
+	const relativeAgentsDir = resolveAgentsDirRelativePath(options.repoRoot, options.agentsDir);
+	const normalizedAgentsDir = relativeAgentsDir
+		? normalizePath(relativeAgentsDir)
+		: relativeAgentsDir;
+
+	const isWithinAgentsDir = (normalizedRelative: string): boolean => {
+		if (normalizedAgentsDir === null) {
+			return false;
+		}
+		if (!normalizedAgentsDir) {
+			return true;
+		}
+		return (
+			normalizedRelative === normalizedAgentsDir ||
+			normalizedRelative.startsWith(`${normalizedAgentsDir}/`)
+		);
+	};
 
 	const walk = async (relative: string, absolute: string): Promise<void> => {
 		const entries = await readdir(absolute, { withFileTypes: true });
 		for (const entry of entries) {
 			const entryRelative = relative ? `${relative}/${entry.name}` : entry.name;
 			const normalizedRelative = normalizePath(entryRelative);
-			if (normalizedRelative === "agents" || normalizedRelative.startsWith("agents/")) {
-				if (entry.isDirectory()) {
-					continue;
-				}
-				if (entry.isFile()) {
-					continue;
-				}
+			if (isWithinAgentsDir(normalizedRelative)) {
+				continue;
 			}
 			if (hasSkippedSegment(normalizedRelative)) {
 				continue;
