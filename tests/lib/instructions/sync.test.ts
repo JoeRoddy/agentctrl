@@ -61,6 +61,31 @@ describe("instruction sync", () => {
 		});
 	});
 
+	it("treats repo AGENTS as plain text without frontmatter or templating", async () => {
+		await withTempRepo(async (root) => {
+			const content = [
+				"---",
+				"targets: [claude]",
+				"---",
+				"Hello <agents claude>Claude</agents><agents not:claude>Other</agents>",
+			].join("\n");
+			await writeInstruction(root, path.join("docs", "AGENTS.md"), content);
+
+			await syncInstructions({
+				repoRoot: root,
+				targets: ["claude", "gemini"],
+				validAgents: VALID_AGENTS,
+				nonInteractive: true,
+			});
+
+			const claude = await readFile(path.join(root, "docs", "CLAUDE.md"), "utf8");
+			const gemini = await readFile(path.join(root, "docs", "GEMINI.md"), "utf8");
+
+			expect(claude).toBe(content);
+			expect(gemini).toBe(content);
+		});
+	});
+
 	it("does not overwrite repo AGENTS outputs when a local override exists", async () => {
 		await withTempRepo(async (root) => {
 			await writeInstruction(root, path.join("docs", "AGENTS.md"), "Shared instructions");
@@ -122,6 +147,30 @@ describe("instruction sync", () => {
 		});
 	});
 
+	it("overrides repo AGENTS outputs when a template targets codex", async () => {
+		await withTempRepo(async (root) => {
+			await writeInstruction(root, path.join("docs", "AGENTS.md"), "Repo instructions");
+			const template = [
+				"---",
+				"outPutPath: docs/",
+				"targets: codex",
+				"---",
+				"Template <agents codex>Codex</agents><agents not:codex>Other</agents>",
+			].join("\n");
+			await writeInstruction(root, path.join("agents", "override.AGENTS.md"), template);
+
+			await syncInstructions({
+				repoRoot: root,
+				targets: ["codex"],
+				validAgents: VALID_AGENTS,
+				nonInteractive: true,
+			});
+
+			const output = await readFile(path.join(root, "docs", "AGENTS.md"), "utf8");
+			expect(output).toBe("Template Codex");
+		});
+	});
+
 	it("normalizes outPutPath and applies templating", async () => {
 		await withTempRepo(async (root) => {
 			const template = [
@@ -142,6 +191,23 @@ describe("instruction sync", () => {
 			const output = await readFile(path.join(root, "docs", "CLAUDE.md"), "utf8");
 			expect(output).toContain("Hello Claude");
 			expect(output).not.toContain("Other");
+		});
+	});
+
+	it("writes outputs for nested AGENTS templates with outPutPath", async () => {
+		await withTempRepo(async (root) => {
+			const template = ["---", "outPutPath: docs/team", "---", "Team instructions"].join("\n");
+			await writeInstruction(root, path.join("agents", "team", "AGENTS.md"), template);
+
+			await syncInstructions({
+				repoRoot: root,
+				targets: ["claude"],
+				validAgents: VALID_AGENTS,
+				nonInteractive: true,
+			});
+
+			const output = await readFile(path.join(root, "docs", "team", "CLAUDE.md"), "utf8");
+			expect(output).toBe("Team instructions");
 		});
 	});
 
@@ -217,6 +283,23 @@ describe("instruction sync", () => {
 		});
 	});
 
+	it("applies overrideSkip filters to instruction outputs", async () => {
+		await withTempRepo(async (root) => {
+			await writeInstruction(root, path.join("docs", "AGENTS.md"), "Repo instructions");
+
+			await syncInstructions({
+				repoRoot: root,
+				targets: ["claude", "gemini"],
+				overrideSkip: ["gemini"],
+				validAgents: VALID_AGENTS,
+				nonInteractive: true,
+			});
+
+			expect(await pathExists(path.join(root, "docs", "CLAUDE.md"))).toBe(true);
+			expect(await pathExists(path.join(root, "docs", "GEMINI.md"))).toBe(false);
+		});
+	});
+
 	it("removes unchanged outputs when sources disappear", async () => {
 		await withTempRepo(async (root) => {
 			await writeInstruction(root, path.join("docs", "AGENTS.md"), "Repo instructions");
@@ -273,6 +356,37 @@ describe("instruction sync", () => {
 			expect(
 				summary.warnings.some((warning) => warning.includes("Output modified since last sync")),
 			).toBe(true);
+		});
+	});
+
+	it("only removes outputs that were tracked in the manifest", async () => {
+		await withTempRepo(async (root) => {
+			await writeInstruction(root, path.join("docs", "AGENTS.md"), "Repo instructions");
+
+			await syncInstructions({
+				repoRoot: root,
+				targets: ["claude", "gemini"],
+				overrideOnly: ["gemini"],
+				validAgents: VALID_AGENTS,
+				removeMissing: true,
+				nonInteractive: true,
+			});
+
+			expect(await pathExists(path.join(root, "docs", "GEMINI.md"))).toBe(true);
+			await writeInstruction(root, path.join("docs", "CLAUDE.md"), "Untracked output");
+			await rm(path.join(root, "docs", "AGENTS.md"), { force: true });
+
+			await syncInstructions({
+				repoRoot: root,
+				targets: ["claude", "gemini"],
+				validAgents: VALID_AGENTS,
+				removeMissing: true,
+				nonInteractive: true,
+			});
+
+			expect(await pathExists(path.join(root, "docs", "GEMINI.md"))).toBe(false);
+			const claude = await readFile(path.join(root, "docs", "CLAUDE.md"), "utf8");
+			expect(claude).toBe("Untracked output");
 		});
 	});
 

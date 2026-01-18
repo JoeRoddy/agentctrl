@@ -36,6 +36,32 @@ describe("instruction repo scanning", () => {
 		});
 	});
 
+	it("skips default directories when scanning for repo instructions", async () => {
+		await withTempRepo(async (root) => {
+			await writeAgents(root, "AGENTS.md");
+			await writeAgents(root, path.join("docs", "AGENTS.md"));
+			const skipDirs = [
+				".git",
+				"node_modules",
+				"dist",
+				".claude",
+				".codex",
+				".gemini",
+				".github",
+				".omniagent",
+				"coverage",
+			];
+			for (const dir of skipDirs) {
+				await writeAgents(root, path.join(dir, "AGENTS.md"));
+			}
+
+			const sources = await scanRepoInstructionSources({ repoRoot: root, includeLocal: true });
+			const relative = sources.map((source) => path.relative(root, source.sourcePath)).sort();
+
+			expect(relative).toEqual(["AGENTS.md", path.join("docs", "AGENTS.md")]);
+		});
+	});
+
 	it("classifies local suffix and path markers", async () => {
 		await withTempRepo(async (root) => {
 			const suffixPath = await writeAgents(root, path.join("docs", "AGENTS.local.md"));
