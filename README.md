@@ -17,7 +17,7 @@ agents/agents/release-helper.md
 npx omniagent@latest sync
 ```
 
-## Quick start (subagents)
+## Quick start
 
 Create a Claude subagent once, then sync everywhere:
 
@@ -45,7 +45,7 @@ Outputs:
 
 Only Claude supports native subagents. Other targets receive converted skills so they still work.
 
-## What you can sync (show, don’t tell)
+## What you can sync
 
 ### Subagents (Claude format → converted skills elsewhere)
 
