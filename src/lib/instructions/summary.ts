@@ -1,5 +1,5 @@
 import type { SyncSourceCounts } from "../sync-results.js";
-import type { InstructionTargetName } from "./targets.js";
+import type { TargetId } from "../sync-targets.js";
 
 export type InstructionOutputCounts = {
 	created: number;
@@ -10,7 +10,7 @@ export type InstructionOutputCounts = {
 };
 
 export type InstructionSyncResult = {
-	targetName: InstructionTargetName;
+	targetName: TargetId;
 	status: "synced" | "skipped" | "failed" | "partial";
 	message: string;
 	counts: InstructionOutputCounts;
@@ -30,7 +30,7 @@ export function emptyOutputCounts(): InstructionOutputCounts {
 	return { created: 0, updated: 0, removed: 0, skipped: 0, total: 0 };
 }
 
-function formatTargetLabel(targetName: InstructionTargetName): string {
+function formatTargetLabel(targetName: TargetId): string {
 	return targetName.charAt(0).toUpperCase() + targetName.slice(1);
 }
 
@@ -70,7 +70,7 @@ export function formatInstructionSummary(
 }
 
 export function buildInstructionResultMessage(options: {
-	targetName: InstructionTargetName;
+	targetName: TargetId;
 	status: InstructionSyncResult["status"];
 	counts: InstructionOutputCounts;
 	error?: string | null;

@@ -1,7 +1,5 @@
 import type { LocalMarkerType, SourceType } from "../local-sources.js";
 import type { FrontmatterValue } from "../slash-commands/frontmatter.js";
-import type { InstructionTargetName } from "./targets.js";
-
 export type InstructionSourceKind = "template" | "repo";
 
 export type InstructionSourceBase = {
@@ -16,16 +14,18 @@ export type InstructionTemplateSource = InstructionSourceBase & {
 	kind: "template";
 	frontmatter: Record<string, FrontmatterValue>;
 	body: string;
-	targets: InstructionTargetName[] | null;
+	targets: string[] | null;
 	invalidTargets: string[];
 	outPutPath: string | null;
 	resolvedOutputDir: string | null;
+	group: string | null;
 };
 
 export type InstructionRepoSource = InstructionSourceBase & {
 	kind: "repo";
 	body: string;
 	resolvedOutputDir: string;
+	group?: string | null;
 };
 
 export type InstructionSource = InstructionTemplateSource | InstructionRepoSource;

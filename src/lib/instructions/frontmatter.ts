@@ -3,22 +3,33 @@ import { extractFrontmatter, type FrontmatterValue } from "../slash-commands/fro
 import {
 	hasRawTargetValues,
 	InvalidFrontmatterTargetsError,
-	isTargetName,
+	isKnownTargetName,
 	resolveFrontmatterTargets,
 } from "../sync-targets.js";
-import type { InstructionTargetName } from "./targets.js";
-
 export type InstructionFrontmatterResult = {
 	frontmatter: Record<string, FrontmatterValue>;
 	body: string;
-	targets: InstructionTargetName[] | null;
+	targets: string[] | null;
 	invalidTargets: string[];
 	outPutPath: string | null;
 	resolvedOutputDir: string | null;
+	group: string | null;
 };
 
 function resolveOutPutPathValue(frontmatter: Record<string, FrontmatterValue>): string | null {
 	const raw = frontmatter.outPutPath ?? frontmatter.outputPath;
+	if (raw === undefined || raw === null) {
+		return null;
+	}
+	if (Array.isArray(raw)) {
+		return null;
+	}
+	const trimmed = raw.trim();
+	return trimmed ? trimmed : null;
+}
+
+function resolveGroupValue(frontmatter: Record<string, FrontmatterValue>): string | null {
+	const raw = frontmatter.group;
 	if (raw === undefined || raw === null) {
 		return null;
 	}
@@ -46,7 +57,7 @@ export function parseInstructionFrontmatter(options: {
 }): InstructionFrontmatterResult {
 	const { frontmatter, body } = extractFrontmatter(options.contents);
 	const rawTargets = [frontmatter.targets, frontmatter.targetAgents];
-	const { targets, invalidTargets } = resolveFrontmatterTargets(rawTargets, isTargetName);
+	const { targets, invalidTargets } = resolveFrontmatterTargets(rawTargets, isKnownTargetName);
 	if (invalidTargets.length > 0) {
 		const invalidList = invalidTargets.join(", ");
 		throw new InvalidFrontmatterTargetsError(
@@ -61,6 +72,7 @@ export function parseInstructionFrontmatter(options: {
 
 	const outPutPath = resolveOutPutPathValue(frontmatter);
 	const resolvedOutputDir = outPutPath ? normalizeOutputDir(outPutPath, options.repoRoot) : null;
+	const group = resolveGroupValue(frontmatter);
 
 	return {
 		frontmatter,
@@ -69,5 +81,6 @@ export function parseInstructionFrontmatter(options: {
 		invalidTargets,
 		outPutPath,
 		resolvedOutputDir,
+		group,
 	};
 }

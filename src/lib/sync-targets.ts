@@ -8,9 +8,11 @@ export const TARGETS = [
 export type TargetName = (typeof TARGETS)[number]["name"];
 export type TargetSpec = (typeof TARGETS)[number];
 export type RawTargetValue = string | string[] | null | undefined;
+export type TargetId = string;
 
 const targetNames = TARGETS.map((target) => target.name) as TargetName[];
 const targetNameSet = new Set<TargetName>(targetNames);
+let customTargetNames = new Set<string>();
 
 export class InvalidFrontmatterTargetsError extends Error {
 	constructor(message: string) {
@@ -21,6 +23,23 @@ export class InvalidFrontmatterTargetsError extends Error {
 
 export function isTargetName(value: string): value is TargetName {
 	return targetNameSet.has(value as TargetName);
+}
+
+export function isKnownTargetName(value: string): value is string {
+	const normalized = value.trim().toLowerCase();
+	return targetNameSet.has(normalized as TargetName) || customTargetNames.has(normalized);
+}
+
+export function setCustomTargetNames(names: string[]): void {
+	customTargetNames = new Set(names.map((name) => name.trim().toLowerCase()).filter(Boolean));
+}
+
+export function getCustomTargetNames(): string[] {
+	return Array.from(customTargetNames.values());
+}
+
+export function getBuiltInTargetNames(): string[] {
+	return [...targetNames];
 }
 
 function normalizeTargetInputs(rawValues: RawTargetValue[]): string[] {
