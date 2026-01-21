@@ -231,8 +231,7 @@ export function validateConfig(
 	const targets = Array.isArray(config.targets) ? config.targets : [];
 
 	targets.forEach((target, index) => {
-		const rawId = typeof target?.id === "string" ? target.id.trim() : "";
-		const basePath = rawId ? `targets[${index}:${rawId}]` : `targets[${index}]`;
+		const basePath = `targets[${index}]`;
 		if (!isRecord(target)) {
 			recordError(errors, "Target must be an object.", basePath);
 			return;
