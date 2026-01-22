@@ -418,9 +418,7 @@ export async function syncSkills(request: SkillSyncRequest): Promise<SyncSummary
 		const items = converterErrorsByTarget.get(target.id);
 		if (items && items.size > 0) {
 			warnings.push(
-				`Converter errors in skills for ${target.displayName}: ${[...items]
-					.sort()
-					.join(", ")}.`,
+				`Converter errors in skills for ${target.displayName}: ${[...items].sort().join(", ")}.`,
 			);
 		}
 	}

@@ -389,25 +389,24 @@ describe("custom target sync", () => {
 				},
 			});
 
-		const summary = await syncSkills({
-			repoRoot: root,
-			targets: [target],
-			validAgents: VALID_AGENTS,
-			removeMissing: true,
-		});
+			const summary = await syncSkills({
+				repoRoot: root,
+				targets: [target],
+				validAgents: VALID_AGENTS,
+				removeMissing: true,
+			});
 
-		expect(summary.hadFailures).toBe(true);
-		expect(await readFile(outputPath, "utf8")).toBe("gamma");
-		expect(
-			summary.warnings.some(
-				(warning) =>
-					warning.includes("Converter errors in skills") && warning.includes("alpha"),
-			),
-		).toBe(true);
-		const result = summary.results.find((entry) => entry.targetName === "acme");
-		expect(result?.status).toBe("failed");
+			expect(summary.hadFailures).toBe(true);
+			expect(await readFile(outputPath, "utf8")).toBe("gamma");
+			expect(
+				summary.warnings.some(
+					(warning) => warning.includes("Converter errors in skills") && warning.includes("alpha"),
+				),
+			).toBe(true);
+			const result = summary.results.find((entry) => entry.targetName === "acme");
+			expect(result?.status).toBe("failed");
+		});
 	});
-});
 
 	it("uses default writers for skill output collisions", async () => {
 		await withTempRepo(async (root) => {
