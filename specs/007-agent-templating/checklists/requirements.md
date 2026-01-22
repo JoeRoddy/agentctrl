@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-01-12
-**Feature**: /Users/joeroddy/Documents/dev/projects/open-source/agentctl/specs/007-agent-templating/spec.md
+**Feature**: <repo>/specs/007-agent-templating/spec.md
 
 ## Content Quality
 

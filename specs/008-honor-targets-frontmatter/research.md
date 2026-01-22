@@ -1,7 +1,7 @@
 # Research: Honor Targets Frontmatter
 
 **Date**: 2026-01-14  
-**Feature**: `/Users/joeroddy/Documents/dev/projects/open-source/agentctl/specs/008-honor-targets-frontmatter/spec.md`
+**Feature**: `<repo>/specs/008-honor-targets-frontmatter/spec.md`
 
 ## Decisions
 

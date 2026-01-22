@@ -16,13 +16,13 @@ Templates requiring updates:
 Follow-up TODOs: None
 -->
 
-# agentctrl Constitution
+# omniagent Constitution
 
 ## Core Principles
 
 ### I. CLI-First Compiler Design
 
-agentctrl is a **compiler/adapter**, not a runtime or agent framework. Every feature
+omniagent is a **compiler/adapter**, not a runtime or agent framework. Every feature
 MUST adhere to this boundary:
 
 - MUST validate canonical agent configuration
@@ -49,7 +49,7 @@ workflows. Git diffability and human readability reduce friction and build trust
 
 ### III. Explicit Lossy Mapping Transparency
 
-Not all agent features map cleanly across targets. agentctrl MUST surface this:
+Not all agent features map cleanly across targets. omniagent MUST surface this:
 
 - MUST warn when source features have no target equivalent
 - MUST document which features are fully supported, partially supported, or unsupported per target
@@ -70,15 +70,15 @@ All compilation and validation logic MUST be thoroughly tested:
 - New targets MUST include a test suite before merge
 
 **Rationale**: As a configuration compiler, correctness is paramount. Users trust
-agentctrl to produce valid output; broken compilation breaks their entire workflow.
+omniagent to produce valid output; broken compilation breaks their entire workflow.
 
 ### V. Predictable Resolution Order
 
 Configuration resolution MUST follow a deterministic, documented order:
 
 1. Project-level overrides (repo `.agents/` directory)
-2. Global user configuration (`~/.config/agentctrl/` or equivalent)
-3. Canonical defaults (built into agentctrl)
+2. Global user configuration (`~/.config/omniagent/` or equivalent)
+3. Canonical defaults (built into omniagent)
 
 This order MUST be:
 
@@ -91,10 +91,10 @@ learning curve and makes behavior predictable for power users.
 
 ## Performance Standards
 
-agentctrl MUST maintain responsive CLI performance:
+omniagent MUST maintain responsive CLI performance:
 
-- `agentctrl validate` MUST complete in under 500ms for typical project configs
-- `agentctrl compile` MUST complete in under 2 seconds for all targets combined
+- `omniagent validate` MUST complete in under 500ms for typical project configs
+- `omniagent compile` MUST complete in under 2 seconds for all targets combined
 - Memory usage MUST stay under 100MB for standard operations
 - File I/O MUST be minimized; prefer streaming over loading entire directories
 - Cold start (first run) MAY be slower but MUST NOT exceed 5 seconds
@@ -135,7 +135,7 @@ Adding a new compilation target requires:
 
 ## Governance
 
-This constitution is the authoritative source for agentctrl development practices.
+This constitution is the authoritative source for omniagent development practices.
 All PRs and code reviews MUST verify compliance with these principles.
 
 ### Amendment Process

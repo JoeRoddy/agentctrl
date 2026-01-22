@@ -1,6 +1,6 @@
 # Implementation Plan: Honor Targets Frontmatter
 
-**Branch**: `008-honor-targets-frontmatter` | **Date**: 2026-01-14 | **Spec**: `/Users/joeroddy/Documents/dev/projects/open-source/agentctl/specs/008-honor-targets-frontmatter/spec.md`
+**Branch**: `008-honor-targets-frontmatter` | **Date**: 2026-01-14 | **Spec**: `<repo>/specs/008-honor-targets-frontmatter/spec.md`
 **Input**: Feature specification from `/specs/008-honor-targets-frontmatter/spec.md`
 
 ## Summary
@@ -24,7 +24,7 @@ generated outputs strip target metadata consistently across conversions.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - **I. CLI-First Compiler Design**: Pass — feature adds compile-time target selection logic only.
 - **II. Markdown-First, Human-Readable Output**: Pass — frontmatter remains YAML and outputs remain
@@ -126,7 +126,7 @@ CLI usage and tests; no HTTP or RPC endpoints are introduced.
 
 ### Agent Context Update
 
-- Run `/Users/joeroddy/Documents/dev/projects/open-source/agentctl/.specify/scripts/bash/update-agent-context.sh codex`
+- Run `<repo>/.specify/scripts/bash/update-agent-context.sh codex`
 - Confirm manual additions preserved
 
 ## Phase 1 Constitution Re-Check
