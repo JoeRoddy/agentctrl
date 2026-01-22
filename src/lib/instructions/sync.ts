@@ -41,7 +41,7 @@ import {
 import { loadInstructionTemplateCatalog } from "./catalog.js";
 import { type InstructionManifestEntry, readManifest, writeManifest } from "./manifest.js";
 import { resolveInstructionOutputPath } from "./paths.js";
-import { scanRepoInstructionSources } from "./scan.js";
+import { type InstructionScanTarget, scanRepoInstructionSources } from "./scan.js";
 import {
 	buildInstructionResultMessage,
 	emptyOutputCounts,
@@ -197,11 +197,13 @@ async function loadRepoSources(options: {
 	repoRoot: string;
 	includeLocal: boolean;
 	agentsDir?: string | null;
+	targets?: InstructionScanTarget[];
 }): Promise<InstructionRepoSource[]> {
 	const entries = await scanRepoInstructionSources({
 		repoRoot: options.repoRoot,
 		includeLocal: options.includeLocal,
 		agentsDir: options.agentsDir,
+		targets: options.targets,
 	});
 	const sources: InstructionRepoSource[] = [];
 	for (const entry of entries) {
@@ -360,6 +362,7 @@ export async function syncInstructions(
 			repoRoot: request.repoRoot,
 			includeLocal,
 			agentsDir: request.agentsDir,
+			targets,
 		}),
 	]);
 

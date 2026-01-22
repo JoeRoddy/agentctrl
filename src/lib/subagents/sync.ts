@@ -13,9 +13,11 @@ import {
 } from "../local-sources.js";
 import { buildSupportedAgentNames } from "../supported-targets.js";
 import type { SyncSourceCounts } from "../sync-results.js";
-import { resolveEffectiveTargets } from "../sync-targets.js";
+import { createTargetNameResolver, resolveEffectiveTargets } from "../sync-targets.js";
+import { BUILTIN_TARGETS } from "../targets/builtins.js";
 import type {
 	ConverterRule,
+	OmniagentConfig,
 	OutputWriter,
 	ResolvedTarget,
 	SyncHooks,
@@ -35,6 +37,7 @@ import {
 	writeManagedOutputs,
 } from "../targets/managed-outputs.js";
 import { normalizeOutputDefinition, resolveOutputPath } from "../targets/output-resolver.js";
+import { resolveTargets } from "../targets/resolve-targets.js";
 import {
 	defaultSubagentWriter,
 	resolveWriter,
@@ -50,17 +53,14 @@ import {
 	type SubagentSyncManifest,
 	writeManifest,
 } from "./manifest.js";
-import {
-	getSubagentProfile,
-	resolveSkillDirectory,
-	resolveSubagentDirectory,
-	SUBAGENT_TARGETS,
-	type SubagentTargetName,
-} from "./targets.js";
+import type { SubagentTargetName } from "./targets.js";
 
 export type SubagentSyncRequest = {
 	repoRoot: string;
 	agentsDir?: string | null;
+	config?: OmniagentConfig | null;
+	resolvedTargets?: ResolvedTarget[];
+	resolveTargetName?: (value: string) => string | null;
 	targets?: SubagentTargetName[];
 	overrideOnly?: SubagentTargetName[] | null;
 	overrideSkip?: SubagentTargetName[] | null;
@@ -163,7 +163,6 @@ const SKILL_FRONTMATTER_KEYS_TO_REMOVE = new Set([
 	"model",
 	"color",
 ]);
-const ALL_TARGET_NAMES = SUBAGENT_TARGETS.map((target) => target.name);
 
 function emptySummaryCounts(): SummaryCounts {
 	return { created: 0, updated: 0, removed: 0, converted: 0, skipped: 0 };
@@ -191,6 +190,41 @@ function formatDisplayPath(repoRoot: string, absolutePath: string): string {
 	const relative = path.relative(repoRoot, absolutePath);
 	const isWithinRepo = relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 	return isWithinRepo ? relative : absolutePath;
+}
+
+function resolveOutputTemplatePath(options: {
+	outputDef: NonNullable<ReturnType<typeof normalizeOutputDefinition>>;
+	repoRoot: string;
+	homeDir: string;
+	agentsDir: string;
+	targetId: string;
+}): string {
+	return resolveOutputPath({
+		template: options.outputDef.path,
+		context: {
+			repoRoot: options.repoRoot,
+			agentsDir: options.agentsDir,
+			homeDir: options.homeDir,
+			targetId: options.targetId,
+			itemName: "__placeholder__",
+		},
+		item: { name: "__placeholder__" },
+		baseDir: options.repoRoot,
+	});
+}
+
+function resolveOutputBaseDir(options: {
+	outputDef: NonNullable<ReturnType<typeof normalizeOutputDefinition>>;
+	repoRoot: string;
+	homeDir: string;
+	agentsDir: string;
+	targetId: string;
+}): { destinationDir: string; extension: string } {
+	const templatePath = resolveOutputTemplatePath(options);
+	return {
+		destinationDir: path.dirname(templatePath),
+		extension: path.extname(templatePath),
+	};
 }
 
 type SourceCountRequest = Pick<
@@ -351,6 +385,7 @@ function resolveOutputPaths(
 	outputKind: OutputKind,
 	destinationDir: string,
 	subagentName: string,
+	outputExtension = ".md",
 ): { destinationPath: string; containerPath: string } {
 	if (outputKind === "skill") {
 		const containerPath = path.join(destinationDir, subagentName);
@@ -362,7 +397,7 @@ function resolveOutputPaths(
 
 	return {
 		containerPath: destinationDir,
-		destinationPath: path.join(destinationDir, `${subagentName}.md`),
+		destinationPath: path.join(destinationDir, `${subagentName}${outputExtension}`),
 	};
 }
 
@@ -415,24 +450,84 @@ async function buildTargetPlan(
 		timestamp: string;
 		canonicalSkills: Map<string, string>;
 		validAgents: string[];
+		allTargets: string[];
 	},
-	targetName: SubagentTargetName,
+	target: ResolvedTarget,
 ): Promise<TargetPlan> {
-	const { request, subagents, removeMissing, validAgents } = params;
-	const profile = getSubagentProfile(targetName);
-	const outputKind: OutputKind = profile.supportsSubagents ? "subagent" : "skill";
-	const destinationDir = profile.supportsSubagents
-		? resolveSubagentDirectory(targetName, request.repoRoot)
-		: resolveSkillDirectory(targetName, request.repoRoot);
+	const { request, subagents, removeMissing, validAgents, allTargets } = params;
+	const targetName = target.id;
+	const displayName = target.displayName;
+	const outputDef = normalizeOutputDefinition(target.outputs.subagents);
+	const skillDef = normalizeOutputDefinition(target.outputs.skills);
+	const shouldSkip = !outputDef || outputDef.fallback?.mode === "skip";
+	let outputKind: OutputKind = "subagent";
+	let pathDef = outputDef;
+	if (
+		!shouldSkip &&
+		outputDef &&
+		outputDef.fallback?.mode === "convert" &&
+		outputDef.fallback.targetType === "skills"
+	) {
+		if (!skillDef) {
+			throw new Error(`Missing skills output for ${targetName} fallback.`);
+		}
+		outputKind = "skill";
+		pathDef = skillDef;
+	}
+
+	if (shouldSkip) {
+		const warnings: string[] = [];
+		const summary = emptySummaryCounts();
+		const actions: SubagentSyncPlanAction[] = [];
+		for (const subagent of subagents) {
+			const effectiveTargets = resolveEffectiveTargets({
+				defaultTargets: subagent.targetAgents,
+				overrideOnly: request.overrideOnly ?? undefined,
+				overrideSkip: request.overrideSkip ?? undefined,
+				allTargets,
+			});
+			if (effectiveTargets.length === 0 || !effectiveTargets.includes(targetName)) {
+				continue;
+			}
+			actions.push({
+				targetName,
+				action: "skip",
+				subagentName: subagent.resolvedName,
+			});
+			summary.skipped += 1;
+		}
+		return {
+			targetName,
+			displayName,
+			outputKind: "subagent",
+			destinationDir: null,
+			manifestPath: null,
+			actions,
+			summary,
+			warnings,
+			nextManaged: new Map(),
+			previousManaged: new Map(),
+			removeMissing,
+		};
+	}
+	const agentsDirPath = resolveAgentsDirPath(request.repoRoot, request.agentsDir);
+	const homeDir = os.homedir();
+	const baseDef = pathDef as NonNullable<ReturnType<typeof normalizeOutputDefinition>>;
+	const { destinationDir, extension } = resolveOutputBaseDir({
+		outputDef: baseDef,
+		repoRoot: request.repoRoot,
+		homeDir,
+		agentsDir: agentsDirPath,
+		targetId: targetName,
+	});
+	const outputExtension = outputKind === "subagent" ? extension || ".md" : ".md";
 	const manifestPath = resolveManifestPath(request.repoRoot, targetName, os.homedir());
 	const warnings: string[] = [];
 	const summary = emptySummaryCounts();
 	const actions: SubagentSyncPlanAction[] = [];
 
-	if (!profile.supportsSubagents && subagents.length > 0) {
-		warnings.push(
-			`${profile.displayName} does not support Claude-format subagents; converting to skills.`,
-		);
+	if (outputKind === "skill" && subagents.length > 0) {
+		warnings.push(`${displayName} does not support native subagents; converting to skills.`);
 	}
 
 	const manifest = await readManifest(manifestPath);
@@ -451,7 +546,7 @@ async function buildTargetPlan(
 			defaultTargets: subagent.targetAgents,
 			overrideOnly: request.overrideOnly ?? undefined,
 			overrideSkip: request.overrideSkip ?? undefined,
-			allTargets: ALL_TARGET_NAMES,
+			allTargets,
 		});
 		if (effectiveTargets.length === 0 || !effectiveTargets.includes(targetName)) {
 			continue;
@@ -467,6 +562,7 @@ async function buildTargetPlan(
 				outputKind,
 				destinationDir,
 				subagent.resolvedName,
+				outputExtension,
 			);
 			actions.push({
 				targetName,
@@ -477,7 +573,7 @@ async function buildTargetPlan(
 			});
 			summary.skipped += 1;
 			warnings.push(
-				`Skipped ${profile.displayName} skill "${
+				`Skipped ${displayName} skill "${
 					subagent.resolvedName
 				}" because canonical skill exists at ${canonicalSkillPath}.`,
 			);
@@ -499,6 +595,7 @@ async function buildTargetPlan(
 			outputKind,
 			destinationDir,
 			subagent.resolvedName,
+			outputExtension,
 		);
 		const existingContent = await readFileIfExists(destinationPath);
 		const existingHash = existingContent ? hashContent(existingContent) : null;
@@ -572,7 +669,7 @@ async function buildTargetPlan(
 		});
 		summary.skipped += 1;
 		warnings.push(
-			`Skipped ${profile.displayName} ${
+			`Skipped ${displayName} ${
 				outputKind === "skill" ? "skill" : "subagent"
 			} "${subagent.resolvedName}" because an unmanaged file exists at ${destinationPath}.`,
 		);
@@ -583,7 +680,7 @@ async function buildTargetPlan(
 			if (catalogNames.has(normalizeName(entry.name))) {
 				continue;
 			}
-			const removalBase = outputKind === "skill" ? entry.name : `${entry.name}.md`;
+			const removalBase = outputKind === "skill" ? entry.name : `${entry.name}${outputExtension}`;
 			const removalPath =
 				outputKind === "skill"
 					? path.join(destinationDir, entry.name)
@@ -601,7 +698,7 @@ async function buildTargetPlan(
 					});
 					summary.skipped += 1;
 					warnings.push(
-						`Skipped removing ${profile.displayName} skill "${
+						`Skipped removing ${displayName} skill "${
 							entry.name
 						}" because canonical skill exists at ${canonicalSkillPath}.`,
 					);
@@ -626,7 +723,7 @@ async function buildTargetPlan(
 
 	return {
 		targetName,
-		displayName: profile.displayName,
+		displayName,
 		outputKind,
 		destinationDir,
 		manifestPath,
@@ -642,24 +739,45 @@ async function buildTargetPlan(
 export async function planSubagentSync(
 	request: SubagentSyncRequest,
 ): Promise<SubagentSyncPlanDetails> {
+	const resolvedTargets =
+		request.resolvedTargets ??
+		resolveTargets({
+			config: request.config ?? null,
+			builtIns: BUILTIN_TARGETS,
+		}).targets;
+	const targetResolver = createTargetNameResolver(resolvedTargets);
+	const resolveTargetName = request.resolveTargetName ?? targetResolver.resolveTargetName;
 	const catalog = await loadSubagentCatalog(request.repoRoot, {
 		includeLocal: !request.excludeLocal,
 		agentsDir: request.agentsDir,
+		resolveTargetName,
 	});
 	const canonicalSkills = await loadCanonicalSkillIndex(request.repoRoot, {
 		includeLocal: request.includeLocalSkills ?? true,
 		agentsDir: request.agentsDir,
 	});
-	const selectedTargets =
+	const allTargetIds = resolvedTargets.map((target) => target.id);
+	const selectedTargets: ResolvedTarget[] =
 		request.targets && request.targets.length > 0
-			? request.targets
-			: SUBAGENT_TARGETS.map((target) => target.name);
-	const validAgents = request.validAgents ?? SUBAGENT_TARGETS.map((target) => target.name);
+			? request.targets.map((targetName) => {
+					const resolved = resolveTargetName(targetName);
+					if (!resolved) {
+						throw new Error(`Unknown subagent target: ${targetName}`);
+					}
+					const target = resolvedTargets.find((entry) => entry.id === resolved);
+					if (!target) {
+						throw new Error(`Unknown subagent target: ${targetName}`);
+					}
+					return target;
+				})
+			: resolvedTargets;
+	const selectedTargetIds = selectedTargets.map((target) => target.id);
+	const validAgents = request.validAgents ?? buildSupportedAgentNames(resolvedTargets);
 	const removeMissing = request.removeMissing ?? true;
 	const timestamp = new Date().toISOString();
 
 	const targetPlans: TargetPlan[] = [];
-	for (const targetName of selectedTargets) {
+	for (const target of selectedTargets) {
 		targetPlans.push(
 			await buildTargetPlan(
 				{
@@ -669,14 +787,15 @@ export async function planSubagentSync(
 					timestamp,
 					canonicalSkills,
 					validAgents,
+					allTargets: allTargetIds,
 				},
-				targetName,
+				target,
 			),
 		);
 	}
 
 	const actions = targetPlans.flatMap((plan) => plan.actions);
-	const planSummary = buildActionSummary(actions, selectedTargets);
+	const planSummary = buildActionSummary(actions, selectedTargetIds);
 	const targetSummaries: SubagentTargetSummary[] = targetPlans.map((plan) => ({
 		targetName: plan.targetName,
 		displayName: plan.displayName,
@@ -690,7 +809,7 @@ export async function planSubagentSync(
 		targetPlans,
 		targetSummaries,
 		warnings: buildInvalidTargetWarnings(catalog.subagents),
-		sourceCounts: buildSourceCounts(catalog.subagents, selectedTargets, ALL_TARGET_NAMES, request),
+		sourceCounts: buildSourceCounts(catalog.subagents, selectedTargetIds, allTargetIds, request),
 	};
 }
 

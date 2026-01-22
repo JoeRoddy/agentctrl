@@ -30,37 +30,18 @@ import { loadSkillCatalog } from "../../lib/skills/catalog.js";
 import { syncSkills as syncSkillTargets } from "../../lib/skills/sync.js";
 import { loadCommandCatalog } from "../../lib/slash-commands/catalog.js";
 import {
-	applySlashCommandSync,
-	type CodexConversionScope,
-	type CodexOption,
 	type SyncRequestV2 as CommandSyncRequestV2,
-	type SyncPlanDetails,
 	type SyncSummary as CommandSyncSummary,
 	type ConflictResolution,
-	formatPlanSummary,
 	formatSyncSummary as formatCommandSummary,
-	planSlashCommandSync,
 	syncSlashCommands as syncSlashCommandsV2,
-	type UnsupportedFallback,
 } from "../../lib/slash-commands/sync.js";
-import {
-	type TargetName as CommandTargetName,
-	getDefaultScope,
-	getTargetProfile,
-	isSlashCommandTargetName,
-	type Scope,
-} from "../../lib/slash-commands/targets.js";
 import { loadSubagentCatalog } from "../../lib/subagents/catalog.js";
 import {
-	applySubagentSync,
 	formatSubagentSummary,
-	planSubagentSync,
-	type SubagentSyncPlanDetails,
 	type SubagentSyncRequestV2,
-	type SubagentSyncSummary,
 	syncSubagents as syncSubagentsV2,
 } from "../../lib/subagents/sync.js";
-import type { SubagentTargetName } from "../../lib/subagents/targets.js";
 import {
 	buildSupportedAgentNames,
 	buildSupportedTargetLabel,
@@ -82,6 +63,7 @@ import {
 	resolveTargets,
 	validateTargetConfig,
 } from "../../lib/targets/index.js";
+import { normalizeCommandOutputDefinition } from "../../lib/targets/output-resolver.js";
 
 type SyncArgs = {
 	skip?: string | string[];
@@ -177,6 +159,7 @@ async function collectLocalItems(
 	repoRoot: string,
 	agentsDir: string | null,
 	resolveTargetName?: (value: string) => string | null,
+	targets?: ResolvedTarget[],
 ): Promise<LocalItemsByCategory> {
 	const [skillCatalog, commandCatalog, subagentCatalog, templateEntries, repoEntries] =
 		await Promise.all([
@@ -184,7 +167,7 @@ async function collectLocalItems(
 			loadCommandCatalog(repoRoot, { agentsDir, resolveTargetName }),
 			loadSubagentCatalog(repoRoot, { agentsDir, resolveTargetName }),
 			scanInstructionTemplateSources({ repoRoot, includeLocal: true, agentsDir }),
-			scanRepoInstructionSources({ repoRoot, includeLocal: true, agentsDir }),
+			scanRepoInstructionSources({ repoRoot, includeLocal: true, agentsDir, targets }),
 		]);
 
 	const skills = sortLocalItems(
@@ -350,7 +333,11 @@ function hasLocalMarker(filePath: string): boolean {
 	return isLocalSuffixFile(baseName, extension);
 }
 
-async function hasLocalSources(repoRoot: string, agentsDir?: string | null): Promise<boolean> {
+async function hasLocalSources(
+	repoRoot: string,
+	agentsDir?: string | null,
+	targets?: ResolvedTarget[],
+): Promise<boolean> {
 	const localRoots = [
 		resolveLocalCategoryRoot(repoRoot, "skills", agentsDir),
 		resolveLocalCategoryRoot(repoRoot, "commands", agentsDir),
@@ -391,7 +378,7 @@ async function hasLocalSources(repoRoot: string, agentsDir?: string | null): Pro
 
 	const [templateEntries, repoEntries] = await Promise.all([
 		scanInstructionTemplateSources({ repoRoot, includeLocal: true, agentsDir }),
-		scanRepoInstructionSources({ repoRoot, includeLocal: true, agentsDir }),
+		scanRepoInstructionSources({ repoRoot, includeLocal: true, agentsDir, targets }),
 	]);
 	if (
 		templateEntries.some((entry) => entry.sourceType === "local") ||
@@ -603,52 +590,26 @@ function rethrowIfInvalidTargets(error: unknown): void {
 	}
 }
 
-function logNonInteractiveNotices(options: {
-	targets: CommandTargetName[];
-	jsonOutput: boolean;
-	scopeByTarget: Partial<Record<CommandTargetName, Scope>>;
-	unsupportedFallback?: UnsupportedFallback;
-	codexOption?: CodexOption;
-	codexConversionScope?: CodexConversionScope;
-}) {
-	const unsupportedFallback = options.unsupportedFallback ?? "skip";
-	const codexOption = options.codexOption ?? "prompts";
-	const codexConversionScope = options.codexConversionScope ?? "global";
-
-	for (const targetName of options.targets) {
-		const profile = getTargetProfile(targetName);
-		if (!profile.supportsSlashCommands) {
-			const fallbackLabel =
-				unsupportedFallback === "convert_to_skills" ? "convert to skills" : "skip";
+function logNonInteractiveNotices(options: { targets: ResolvedTarget[]; jsonOutput: boolean }) {
+	for (const target of options.targets) {
+		const commandDef = normalizeCommandOutputDefinition(target.outputs.commands);
+		if (!commandDef || commandDef.fallback?.mode === "skip") {
+			continue;
+		}
+		if (commandDef.fallback?.mode === "convert" && commandDef.fallback.targetType === "skills") {
 			logWithChannel(
-				`${profile.displayName} does not support slash commands; will ${fallbackLabel}.`,
+				`${target.displayName} commands are configured to convert to skills.`,
 				options.jsonOutput,
 			);
 			continue;
 		}
-
-		if (targetName === "codex") {
+		const hasProject = Boolean(commandDef.projectPath);
+		const hasUser = Boolean(commandDef.userPath);
+		if (hasUser && !hasProject) {
+			logWithChannel(`${target.displayName} commands are user-only.`, options.jsonOutput);
+		} else if (hasUser && hasProject) {
 			logWithChannel(
-				"Codex only supports global prompts (no project-level custom commands).",
-				options.jsonOutput,
-			);
-			if (codexOption === "convert_to_skills") {
-				logWithChannel(
-					`Converting Codex commands to ${codexConversionScope} skills.`,
-					options.jsonOutput,
-				);
-			} else if (codexOption === "skip") {
-				logWithChannel("Skipping Codex slash commands.", options.jsonOutput);
-			} else {
-				logWithChannel("Using Codex global prompts.", options.jsonOutput);
-			}
-			continue;
-		}
-
-		if (profile.supportedScopes.length > 1) {
-			const scope = options.scopeByTarget[targetName] ?? getDefaultScope(profile);
-			logWithChannel(
-				`Using ${scope} scope for ${profile.displayName} commands.`,
+				`${target.displayName} commands will be written to project and user locations.`,
 				options.jsonOutput,
 			);
 		}
@@ -808,287 +769,6 @@ function buildInstructionsSummary(
 	};
 }
 
-function emptySubagentCounts(): SubagentSyncSummary["results"][number]["counts"] {
-	return { created: 0, updated: 0, removed: 0, converted: 0, skipped: 0 };
-}
-
-function formatSubagentFailureMessage(
-	displayName: string,
-	outputKind: "subagent" | "skill",
-	message: string,
-): string {
-	const modeLabel = outputKind === "skill" ? " [skills]" : "";
-	return `Failed ${displayName} subagents${modeLabel}: ${message}`;
-}
-
-function buildSubagentSummary(
-	sourcePath: string,
-	targets: Array<ResolvedTarget | string>,
-	message: string,
-	excludedLocal: boolean,
-): SubagentSyncSummary {
-	const status = "failed" as const;
-	return {
-		sourcePath,
-		results: normalizeTargets(targets).map((target) => ({
-			targetName: target.id,
-			status,
-			message: formatSubagentFailureMessage(target.displayName, "subagent", message),
-			error: message,
-			counts: emptySubagentCounts(),
-			warnings: [],
-		})),
-		warnings: [],
-		hadFailures: true,
-		sourceCounts: {
-			shared: 0,
-			local: 0,
-			excludedLocal,
-		},
-	};
-}
-
-type SubagentSyncOptions = {
-	repoRoot: string;
-	agentsDir?: string | null;
-	targets: SubagentTargetName[];
-	overrideOnly?: SubagentTargetName[];
-	overrideSkip?: SubagentTargetName[];
-	removeMissing: boolean;
-	validAgents: string[];
-	excludeLocal?: boolean;
-	includeLocalSkills?: boolean;
-};
-
-async function _syncSubagents(options: SubagentSyncOptions): Promise<SubagentSyncSummary> {
-	const sourcePath = resolveSharedCategoryRoot(options.repoRoot, "agents", options.agentsDir);
-	if (options.targets.length === 0) {
-		return {
-			sourcePath,
-			results: [],
-			warnings: [],
-			hadFailures: false,
-			sourceCounts: {
-				shared: 0,
-				local: 0,
-				excludedLocal: options.excludeLocal ?? false,
-			},
-		};
-	}
-
-	let planDetails: SubagentSyncPlanDetails;
-	try {
-		planDetails = await planSubagentSync({
-			repoRoot: options.repoRoot,
-			agentsDir: options.agentsDir,
-			targets: options.targets,
-			overrideOnly: options.overrideOnly,
-			overrideSkip: options.overrideSkip,
-			removeMissing: options.removeMissing,
-			validAgents: options.validAgents,
-			excludeLocal: options.excludeLocal,
-			includeLocalSkills: options.includeLocalSkills,
-		});
-	} catch (error) {
-		rethrowIfInvalidTargets(error);
-		const message = error instanceof Error ? error.message : String(error);
-		return buildSubagentSummary(
-			sourcePath,
-			options.targets,
-			message,
-			options.excludeLocal ?? false,
-		);
-	}
-
-	try {
-		return await applySubagentSync(planDetails);
-	} catch (error) {
-		rethrowIfInvalidTargets(error);
-		const message = error instanceof Error ? error.message : String(error);
-		return buildSubagentSummary(
-			sourcePath,
-			options.targets,
-			message,
-			options.excludeLocal ?? false,
-		);
-	}
-}
-
-type CommandSyncOptions = {
-	repoRoot: string;
-	agentsDir?: string | null;
-	targets: CommandTargetName[];
-	overrideOnly?: CommandTargetName[];
-	overrideSkip?: CommandTargetName[];
-	jsonOutput: boolean;
-	yes: boolean;
-	removeMissing: boolean;
-	conflicts?: string;
-	catalogStatus: CatalogStatus;
-	validAgents: string[];
-	excludeLocal?: boolean;
-};
-
-async function _syncSlashCommands(options: CommandSyncOptions): Promise<CommandSyncSummary> {
-	const sourcePath = resolveSharedCategoryRoot(options.repoRoot, "commands", options.agentsDir);
-	if (options.targets.length === 0) {
-		return {
-			sourcePath,
-			results: [],
-			warnings: [],
-			hadFailures: false,
-			sourceCounts: {
-				shared: 0,
-				local: 0,
-				excludedLocal: options.excludeLocal ?? false,
-			},
-		};
-	}
-	if (!options.catalogStatus.available) {
-		return buildCommandSummary(
-			sourcePath,
-			options.targets,
-			"skipped",
-			options.catalogStatus.reason,
-			options.excludeLocal ?? false,
-		);
-	}
-
-	const nonInteractive = options.yes || !process.stdin.isTTY;
-	const scopeByTarget: Partial<Record<CommandTargetName, Scope>> = {};
-	let unsupportedFallback: UnsupportedFallback | undefined;
-	let codexOption: CodexOption | undefined;
-	let codexConversionScope: CodexConversionScope | undefined;
-
-	for (const targetName of options.targets) {
-		const profile = getTargetProfile(targetName);
-		if (profile.supportedScopes.includes("project")) {
-			scopeByTarget[targetName] = "project";
-		}
-		if (targetName === "copilot") {
-			unsupportedFallback = "convert_to_skills";
-		}
-	}
-
-	if (!nonInteractive) {
-		if (options.targets.includes("codex")) {
-			await withPrompter(async (ask) => {
-				logWithChannel(
-					"Codex only supports global prompts (no project-level custom commands).",
-					options.jsonOutput,
-				);
-				const choice = await promptChoice(
-					ask,
-					"Choose Codex option (global/convert) [global]: ",
-					["global", "convert"],
-					"global",
-				);
-				codexOption = choice === "convert" ? "convert_to_skills" : "prompts";
-			});
-		}
-	}
-
-	if (nonInteractive) {
-		logNonInteractiveNotices({
-			targets: options.targets,
-			jsonOutput: options.jsonOutput,
-			scopeByTarget,
-			unsupportedFallback,
-			codexOption,
-			codexConversionScope,
-		});
-	}
-
-	const conflictResolution = options.conflicts as ConflictResolution | undefined;
-	const planRequestBase = {
-		repoRoot: options.repoRoot,
-		agentsDir: options.agentsDir,
-		targets: options.targets,
-		overrideOnly: options.overrideOnly,
-		overrideSkip: options.overrideSkip,
-		scopeByTarget,
-		removeMissing: options.removeMissing,
-		unsupportedFallback: unsupportedFallback ?? (nonInteractive ? "skip" : undefined),
-		codexOption: codexOption ?? (nonInteractive ? "prompts" : undefined),
-		codexConversionScope: codexConversionScope ?? (nonInteractive ? "global" : undefined),
-		conflictResolution: conflictResolution ?? "skip",
-		useDefaults: options.yes,
-		nonInteractive,
-		validAgents: options.validAgents,
-		excludeLocal: options.excludeLocal,
-	};
-
-	let planDetails: SyncPlanDetails;
-	try {
-		planDetails = await planSlashCommandSync(planRequestBase);
-	} catch (error) {
-		rethrowIfInvalidTargets(error);
-		const message = error instanceof Error ? error.message : String(error);
-		return buildCommandSummary(
-			sourcePath,
-			options.targets,
-			"failed",
-			message,
-			options.excludeLocal ?? false,
-		);
-	}
-
-	if (!nonInteractive && !conflictResolution && planDetails.conflicts > 0) {
-		await withPrompter(async (ask) => {
-			const resolution = await promptChoice(
-				ask,
-				"Conflicts detected. Choose resolution (overwrite/rename/skip) [skip]: ",
-				["overwrite", "rename", "skip"],
-				"skip",
-			);
-			planDetails = await planSlashCommandSync({
-				...planRequestBase,
-				conflictResolution: resolution as ConflictResolution,
-			});
-		});
-	}
-
-	logWithChannel(
-		formatPlanSummary(planDetails.plan, planDetails.targetSummaries),
-		options.jsonOutput,
-	);
-
-	const hasPlannedChanges = planDetails.targetPlans.some((plan) => {
-		const counts = plan.summary;
-		return counts.create + counts.update + counts.remove + counts.convert > 0;
-	});
-
-	if (!nonInteractive && !options.yes && hasPlannedChanges) {
-		const shouldApply = await withPrompter((ask) =>
-			promptConfirm(ask, "Apply these changes?", false),
-		);
-		if (!shouldApply) {
-			logWithChannel("Aborted.", options.jsonOutput);
-			return buildCommandSummary(
-				sourcePath,
-				options.targets,
-				"skipped",
-				"Aborted by user.",
-				options.excludeLocal ?? false,
-			);
-		}
-	}
-
-	try {
-		return await applySlashCommandSync(planDetails);
-	} catch (error) {
-		rethrowIfInvalidTargets(error);
-		const message = error instanceof Error ? error.message : String(error);
-		return buildCommandSummary(
-			sourcePath,
-			options.targets,
-			"failed",
-			message,
-			options.excludeLocal ?? false,
-		);
-	}
-}
-
 export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 	command: "sync",
 	describe: "Sync skills, subagents, slash commands, and instruction files to targets",
@@ -1154,8 +834,8 @@ export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 				"omniagent sync",
 				"Sync all targets (auto-discovers omniagent.config.* in the agents directory)",
 			)
-			.example("omniagent sync --skip codex", "Skip a target")
-			.example("omniagent sync --only claude", "Sync only one target")
+			.example("omniagent sync --skip <target>", "Skip a target")
+			.example("omniagent sync --only <target>", "Sync only one target")
 			.example("omniagent sync --agentsDir ./my-custom-agents", "Use a custom agents directory")
 			.example("omniagent sync --exclude-local", "Sync shared sources only")
 			.example(
@@ -1279,7 +959,7 @@ export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 			}
 
 			const localItems = listLocal
-				? await collectLocalItems(repoRoot, agentsDir, resolveTargetName)
+				? await collectLocalItems(repoRoot, agentsDir, resolveTargetName, resolved.targets)
 				: { skills: [], commands: [], agents: [], instructions: [], total: 0 };
 			if (listLocal) {
 				const output = formatLocalItemsOutput(localItems, repoRoot, jsonOutput);
@@ -1290,7 +970,7 @@ export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 			}
 
 			const nonInteractive = yes || !process.stdin.isTTY;
-			const hasLocalItems = await hasLocalSources(repoRoot, agentsDir);
+			const hasLocalItems = await hasLocalSources(repoRoot, agentsDir, resolved.targets);
 
 			const selectedSkillTargets = selectedTargets.filter((target) => target.outputs.skills);
 			const selectedCommandTargets = selectedTargets.filter((target) => target.outputs.commands);
@@ -1420,30 +1100,9 @@ export const syncCommand: CommandModule<Record<string, never>, SyncArgs> = {
 					excludeLocalCommands,
 				);
 			} else {
-				const commandTargetNames = selectedCommandTargets
-					.map((target) => target.id)
-					.filter(isSlashCommandTargetName);
-				if (commandTargetNames.length > 0) {
-					const scopeByTarget: Partial<Record<CommandTargetName, Scope>> = {};
-					let unsupportedFallback: UnsupportedFallback | undefined;
-					for (const targetName of commandTargetNames) {
-						const profile = getTargetProfile(targetName);
-						if (profile.supportedScopes.includes("project")) {
-							scopeByTarget[targetName] = "project";
-						}
-						if (targetName === "copilot") {
-							unsupportedFallback = "convert_to_skills";
-						}
-					}
-					if (nonInteractive) {
-						logNonInteractiveNotices({
-							targets: commandTargetNames,
-							jsonOutput,
-							scopeByTarget,
-							unsupportedFallback,
-						});
-						logWithChannel("Planned actions:", jsonOutput);
-					}
+				if (nonInteractive && selectedCommandTargets.length > 0) {
+					logNonInteractiveNotices({ targets: selectedCommandTargets, jsonOutput });
+					logWithChannel("Planned actions:", jsonOutput);
 				}
 				commandsSummary = await syncSlashCommandsV2({
 					repoRoot,

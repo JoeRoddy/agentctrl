@@ -17,12 +17,4 @@ export {
 	type SummaryCounts,
 	syncSubagents,
 } from "./sync.js";
-export {
-	getSubagentProfile,
-	isSubagentTargetName,
-	resolveSkillDirectory,
-	resolveSubagentDirectory,
-	SUBAGENT_TARGETS,
-	type SubagentTargetName,
-	type SubagentTargetProfile,
-} from "./targets.js";
+export type { SubagentTargetName } from "./targets.js";

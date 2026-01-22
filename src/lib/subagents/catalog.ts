@@ -39,7 +39,7 @@ export type SubagentCatalog = {
 	repoRoot: string;
 	catalogPath: string;
 	localCatalogPath: string;
-	canonicalStandard: "claude_code";
+	canonicalStandard: "canonical";
 	subagents: SubagentDefinition[];
 	sharedSubagents: SubagentDefinition[];
 	localSubagents: SubagentDefinition[];
@@ -360,7 +360,7 @@ export async function loadSubagentCatalog(
 		repoRoot,
 		catalogPath,
 		localCatalogPath,
-		canonicalStandard: "claude_code",
+		canonicalStandard: "canonical",
 		subagents,
 		sharedSubagents,
 		localSubagents,

@@ -1,6 +1,7 @@
+import { BUILTIN_TARGETS } from "./targets/builtins.js";
 import type { ResolvedTarget } from "./targets/config-types.js";
 
-export const SUPPORTED_AGENT_NAMES = Object.freeze(["codex", "claude", "copilot", "gemini"]);
+export const SUPPORTED_AGENT_NAMES = Object.freeze(BUILTIN_TARGETS.map((target) => target.id));
 
 export function buildSupportedAgentNames(targets: ResolvedTarget[]): string[] {
 	const ordered: string[] = [];

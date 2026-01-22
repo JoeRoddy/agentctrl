@@ -7,9 +7,11 @@ import { resolveAgentsDirPath } from "../agents-dir.js";
 import { normalizeName } from "../catalog-utils.js";
 import { buildSupportedAgentNames } from "../supported-targets.js";
 import type { SyncSourceCounts } from "../sync-results.js";
-import { resolveEffectiveTargets } from "../sync-targets.js";
+import { createTargetNameResolver, resolveEffectiveTargets } from "../sync-targets.js";
+import { BUILTIN_TARGETS } from "../targets/builtins.js";
 import type {
 	ConverterRule,
+	OmniagentConfig,
 	OutputWriter,
 	ResolvedTarget,
 	SyncHooks,
@@ -34,14 +36,10 @@ import {
 	resolveCommandOutputPath,
 	resolveOutputPath as resolveTargetOutputPath,
 } from "../targets/output-resolver.js";
+import { resolveTargets } from "../targets/resolve-targets.js";
 import { resolveWriter, type WriterRegistry, writeFileOutput } from "../targets/writers.js";
 import { loadCommandCatalog, type SlashCommandDefinition } from "./catalog.js";
-import {
-	renderClaudeCommand,
-	renderCodexPrompt,
-	renderGeminiCommand,
-	renderSkillFromCommand,
-} from "./formatting.js";
+import { renderMarkdownCommand, renderSkillFromCommand, renderTomlCommand } from "./formatting.js";
 import { extractFrontmatter } from "./frontmatter.js";
 import {
 	type ManagedCommand,
@@ -50,32 +48,22 @@ import {
 	type SyncStateManifest,
 	writeManifest,
 } from "./manifest.js";
-import {
-	getDefaultScope,
-	getTargetProfile,
-	resolveCommandDestination,
-	type Scope,
-	SLASH_COMMAND_TARGETS,
-	type TargetName,
-} from "./targets.js";
+import type { Scope, TargetName } from "./targets.js";
 
 export type ConflictResolution = "overwrite" | "rename" | "skip";
-export type UnsupportedFallback = "convert_to_skills" | "skip";
-export type CodexOption = "prompts" | "convert_to_skills" | "skip";
-export type CodexConversionScope = "global" | "project" | "skip";
 
 export type SyncRequest = {
 	repoRoot: string;
 	agentsDir?: string | null;
+	config?: OmniagentConfig | null;
+	resolvedTargets?: ResolvedTarget[];
+	resolveTargetName?: (value: string) => string | null;
 	targets?: TargetName[];
 	overrideOnly?: TargetName[] | null;
 	overrideSkip?: TargetName[] | null;
 	scopeByTarget?: Partial<Record<TargetName, Scope>>;
 	conflictResolution?: ConflictResolution;
 	removeMissing?: boolean;
-	unsupportedFallback?: UnsupportedFallback;
-	codexOption?: CodexOption;
-	codexConversionScope?: CodexConversionScope;
 	nonInteractive?: boolean;
 	useDefaults?: boolean;
 	validAgents?: string[];
@@ -183,18 +171,7 @@ export type SyncPlanDetails = {
 	sourceCounts?: SyncSourceCounts;
 };
 
-const PROJECT_SKILL_PATHS: Record<TargetName, string> = {
-	codex: path.join(".codex", "skills"),
-	claude: path.join(".claude", "skills"),
-	copilot: path.join(".github", "skills"),
-	gemini: path.join(".gemini", "skills"),
-};
-
 const DEFAULT_CONFLICT_RESOLUTION: ConflictResolution = "skip";
-const DEFAULT_UNSUPPORTED_FALLBACK: UnsupportedFallback = "skip";
-const DEFAULT_CODEX_OPTION: CodexOption = "prompts";
-const DEFAULT_CODEX_CONVERSION_SCOPE: CodexConversionScope = "global";
-const ALL_TARGET_NAMES = SLASH_COMMAND_TARGETS.map((target) => target.name);
 
 function emptySummaryCounts(): SummaryCounts {
 	return { create: 0, update: 0, remove: 0, convert: 0, skip: 0 };
@@ -281,11 +258,8 @@ async function listExistingNames(destinationDir: string, extension: string): Pro
 	return names;
 }
 
-function getOutputExtension(targetName: TargetName, outputKind: OutputKind): string {
-	if (outputKind === "command" && targetName === "gemini") {
-		return ".toml";
-	}
-	return ".md";
+function getCommandFormat(outputPath: string): "markdown" | "toml" {
+	return path.extname(outputPath).toLowerCase() === ".toml" ? "toml" : "markdown";
 }
 
 function resolveProjectManifestPath(
@@ -358,54 +332,86 @@ async function resolveSkillBackupPath(destinationPath: string): Promise<string> 
 
 function renderOutput(
 	command: SlashCommandDefinition,
-	targetName: TargetName,
 	outputKind: OutputKind,
+	outputPath: string,
 ): string {
 	if (outputKind === "skill") {
 		return renderSkillFromCommand(command);
 	}
-	if (targetName === "gemini") {
-		return renderGeminiCommand(command);
-	}
-	if (targetName === "codex") {
-		return renderCodexPrompt(command);
-	}
-	return renderClaudeCommand(command);
+	return getCommandFormat(outputPath) === "toml"
+		? renderTomlCommand(command)
+		: renderMarkdownCommand(command);
 }
 
-function resolveSkillDestination(
-	targetName: TargetName,
-	scope: Scope,
-	repoRoot: string,
-	homeDir: string,
-): string {
-	if (scope === "global") {
-		if (targetName !== "codex") {
-			throw new Error(`Global skills are only supported for codex right now (${targetName}).`);
-		}
-		return path.join(homeDir, PROJECT_SKILL_PATHS[targetName]);
+function isWithinDir(baseDir: string, candidate: string): boolean {
+	const relative = path.relative(baseDir, candidate);
+	if (relative === "") {
+		return true;
 	}
-	return path.join(repoRoot, PROJECT_SKILL_PATHS[targetName]);
+	return !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
-function isSkillScopeSupported(targetName: TargetName, scope: Scope): boolean {
-	if (scope === "global") {
-		return targetName === "codex";
+function resolveCommandTemplatePath(options: {
+	commandDef: NonNullable<ReturnType<typeof normalizeCommandOutputDefinition>>;
+	scope: Scope;
+	repoRoot: string;
+	homeDir: string;
+	agentsDir: string;
+	targetId: string;
+}): string {
+	const template =
+		options.scope === "project" ? options.commandDef.projectPath : options.commandDef.userPath;
+	if (!template) {
+		throw new Error(`No ${options.scope} command destination for target ${options.targetId}.`);
 	}
-	return scope === "project";
+	return resolveCommandOutputPath({
+		template,
+		context: {
+			repoRoot: options.repoRoot,
+			agentsDir: options.agentsDir,
+			homeDir: options.homeDir,
+			targetId: options.targetId,
+			itemName: "__placeholder__",
+			commandLocation: options.scope === "project" ? "project" : "user",
+		},
+		item: { name: "__placeholder__" },
+		baseDir: options.scope === "project" ? options.repoRoot : options.homeDir,
+	});
+}
+
+function resolveSkillTemplatePath(options: {
+	skillDef: NonNullable<ReturnType<typeof normalizeOutputDefinition>>;
+	repoRoot: string;
+	homeDir: string;
+	agentsDir: string;
+	targetId: string;
+}): string {
+	return resolveTargetOutputPath({
+		template: options.skillDef.path,
+		context: {
+			repoRoot: options.repoRoot,
+			agentsDir: options.agentsDir,
+			homeDir: options.homeDir,
+			targetId: options.targetId,
+			itemName: "__placeholder__",
+		},
+		item: { name: "__placeholder__" },
+		baseDir: options.repoRoot,
+	});
 }
 
 function resolveTargetCommands(
 	commands: SlashCommandDefinition[],
 	targetName: TargetName,
 	request: SyncRequest,
+	allTargets: string[],
 ): SlashCommandDefinition[] {
 	return commands.filter((command) => {
 		const effectiveTargets = resolveEffectiveTargets({
 			defaultTargets: command.targetAgents,
 			overrideOnly: request.overrideOnly ?? undefined,
 			overrideSkip: request.overrideSkip ?? undefined,
-			allTargets: ALL_TARGET_NAMES,
+			allTargets,
 		});
 		if (effectiveTargets.length === 0) {
 			return false;
@@ -514,75 +520,46 @@ function buildActionSummary(actions: PlannedAction[], targets: TargetName[]): Sy
 	return { actions: planActions, summary };
 }
 
-function resolveTargetMode(
-	targetName: TargetName,
-	profileSupportsSlash: boolean,
-	unsupportedFallback: UnsupportedFallback,
-	codexOption: CodexOption,
-	codexConversionScope: CodexConversionScope,
-): { mode: "commands" | "skills" | "skip"; scope: Scope | null; outputKind: OutputKind | null } {
-	if (!profileSupportsSlash) {
-		if (unsupportedFallback === "convert_to_skills") {
-			return { mode: "skills", scope: "project", outputKind: "skill" };
-		}
-		return { mode: "skip", scope: null, outputKind: null };
-	}
-
-	if (targetName === "codex") {
-		if (codexOption === "skip") {
-			return { mode: "skip", scope: null, outputKind: null };
-		}
-		if (codexOption === "convert_to_skills") {
-			const scope = codexConversionScope === "skip" ? null : codexConversionScope;
-			if (!scope) {
-				return { mode: "skip", scope: null, outputKind: null };
-			}
-			return { mode: "skills", scope, outputKind: "skill" };
-		}
-		return { mode: "commands", scope: "global", outputKind: "command" };
-	}
-
-	return { mode: "commands", scope: null, outputKind: "command" };
-}
-
 async function buildTargetPlan(
 	params: {
 		request: SyncRequest;
 		commands: SlashCommandDefinition[];
 		conflictResolution: ConflictResolution;
-		unsupportedFallback: UnsupportedFallback;
-		codexOption: CodexOption;
-		codexConversionScope: CodexConversionScope;
 		removeMissing: boolean;
 		timestamp: string;
 		validAgents: string[];
+		allTargets: string[];
 	},
-	targetName: TargetName,
+	target: ResolvedTarget,
 ): Promise<{ plan: TargetPlan; conflicts: number }> {
-	const {
-		request,
-		commands,
-		conflictResolution,
-		unsupportedFallback,
-		codexOption,
-		codexConversionScope,
-		validAgents,
-	} = params;
-	const profile = getTargetProfile(targetName);
-	const modeSelection = resolveTargetMode(
-		targetName,
-		profile.supportsSlashCommands,
-		unsupportedFallback,
-		codexOption,
-		codexConversionScope,
-	);
-	const displayName = profile.displayName;
-	const targetCommands = resolveTargetCommands(commands, targetName, request);
+	const { request, commands, conflictResolution, validAgents, allTargets } = params;
+	const targetName = target.id;
+	const displayName = target.displayName;
+	const commandDef = normalizeCommandOutputDefinition(target.outputs.commands);
+	const skillDef = normalizeOutputDefinition(target.outputs.skills);
+	const targetCommands = resolveTargetCommands(commands, targetName, request, allTargets);
 	const summary = emptySummaryCounts();
 	const actions: PlannedAction[] = [];
 	let conflicts = 0;
 
-	if (modeSelection.mode === "skip" || !modeSelection.outputKind) {
+	let mode: "commands" | "skills" | "skip" = "commands";
+	let outputKind: OutputKind | null = "command";
+
+	if (!commandDef || commandDef.fallback?.mode === "skip") {
+		mode = "skip";
+		outputKind = null;
+	} else if (
+		commandDef.fallback?.mode === "convert" &&
+		commandDef.fallback.targetType === "skills"
+	) {
+		if (!skillDef) {
+			throw new Error(`Missing skills output for ${targetName} fallback.`);
+		}
+		mode = "skills";
+		outputKind = "skill";
+	}
+
+	if (mode === "skip" || !outputKind) {
 		for (const command of targetCommands) {
 			actions.push({
 				targetName,
@@ -597,7 +574,7 @@ async function buildTargetPlan(
 				targetName,
 				displayName,
 				scope: null,
-				mode: "skip",
+				mode,
 				outputKind: null,
 				destinationDir: null,
 				manifestPath: null,
@@ -612,35 +589,68 @@ async function buildTargetPlan(
 		};
 	}
 
-	let scope = modeSelection.scope;
-	if (scope === null) {
-		const requestedScope = request.scopeByTarget?.[targetName];
-		if (requestedScope) {
-			scope = requestedScope;
-		} else {
-			scope = getDefaultScope(profile);
-		}
-	}
-
-	if (modeSelection.mode === "skills") {
-		if (!isSkillScopeSupported(targetName, scope)) {
-			throw new Error(`Target ${targetName} does not support ${scope} scope for skill conversion.`);
-		}
-	} else if (!profile.supportedScopes.includes(scope)) {
-		throw new Error(`Target ${targetName} does not support ${scope} scope.`);
-	}
-
 	const homeDir = os.homedir();
-	const destinationDir =
-		modeSelection.mode === "skills"
-			? resolveSkillDestination(targetName, scope, request.repoRoot, homeDir)
-			: resolveCommandDestination(targetName, scope, request.repoRoot, homeDir);
+	const agentsDirPath = resolveAgentsDirPath(request.repoRoot, request.agentsDir);
+	let scope: Scope | null = null;
+	let destinationDir: string | null = null;
+	let extension = ".md";
+
+	if (mode === "commands" && commandDef) {
+		const supportedScopes: Scope[] = [];
+		if (commandDef.projectPath) {
+			supportedScopes.push("project");
+		}
+		if (commandDef.userPath) {
+			supportedScopes.push("global");
+		}
+		if (supportedScopes.length === 0) {
+			throw new Error(`Target ${targetName} does not define a command output path.`);
+		}
+		const requestedScope = request.scopeByTarget?.[targetName];
+		scope = requestedScope ?? (supportedScopes.includes("project") ? "project" : "global");
+		if (!supportedScopes.includes(scope)) {
+			throw new Error(`Target ${targetName} does not support ${scope} scope.`);
+		}
+		const templatePath = resolveCommandTemplatePath({
+			commandDef,
+			scope,
+			repoRoot: request.repoRoot,
+			homeDir,
+			agentsDir: agentsDirPath,
+			targetId: targetName,
+		});
+		destinationDir = path.dirname(templatePath);
+		extension = path.extname(templatePath);
+	} else if (mode === "skills" && skillDef) {
+		const templatePath = resolveSkillTemplatePath({
+			skillDef,
+			repoRoot: request.repoRoot,
+			homeDir,
+			agentsDir: agentsDirPath,
+			targetId: targetName,
+		});
+		destinationDir = path.dirname(templatePath);
+		scope = isWithinDir(homeDir, destinationDir) ? "global" : "project";
+		if (commandDef) {
+			const fallbackScope: Scope = commandDef.projectPath ? "project" : "global";
+			const commandTemplate = resolveCommandTemplatePath({
+				commandDef,
+				scope: fallbackScope,
+				repoRoot: request.repoRoot,
+				homeDir,
+				agentsDir: agentsDirPath,
+				targetId: targetName,
+			});
+			extension = path.extname(commandTemplate);
+		}
+	}
+
+	if (!scope || !destinationDir) {
+		throw new Error(`Unable to resolve command outputs for target ${targetName}.`);
+	}
 	const manifestPath = resolveProjectManifestPath(targetName, scope, request.repoRoot, homeDir);
-	const extension = getOutputExtension(targetName, modeSelection.outputKind);
 	const existingNames =
-		modeSelection.outputKind === "skill"
-			? new Set<string>()
-			: await listExistingNames(destinationDir, extension);
+		outputKind === "skill" ? new Set<string>() : await listExistingNames(destinationDir, extension);
 	const reservedNames = new Set(existingNames);
 
 	const legacyManifestPaths = new Set<string>();
@@ -651,7 +661,7 @@ async function buildTargetPlan(
 	legacyManifestPaths.add(
 		resolveLegacyProjectManifestPath(targetName, scope, request.repoRoot, homeDir),
 	);
-	if (modeSelection.outputKind === "skill") {
+	if (outputKind === "skill") {
 		legacyManifestPaths.add(resolveManifestPath(path.dirname(destinationDir)));
 		legacyManifestPaths.add(
 			resolveLegacySkillManifestPath(targetName, scope, request.repoRoot, homeDir),
@@ -693,19 +703,19 @@ async function buildTargetPlan(
 		const nameKey = normalizeName(command.name);
 		catalogNames.add(nameKey);
 
-		const output = renderOutput(templatedCommand, targetName, modeSelection.outputKind);
-		const outputHash = hashContent(output);
 		const { destinationPath } = resolveOutputPath(
 			command.name,
 			destinationDir,
-			modeSelection.outputKind,
+			outputKind,
 			extension,
 		);
+		const output = renderOutput(templatedCommand, outputKind, destinationPath);
+		const outputHash = hashContent(output);
 		const existingContent = await readFileIfExists(destinationPath);
 		const existingHash = existingContent ? hashContent(existingContent) : null;
 		const previousEntry = previousManaged.get(nameKey);
 
-		if (modeSelection.outputKind === "skill") {
+		if (outputKind === "skill") {
 			const legacyPath = path.join(destinationDir, `${command.name}${extension}`);
 			const legacyContent = await readFileIfExists(legacyPath);
 			if (legacyContent) {
@@ -717,7 +727,7 @@ async function buildTargetPlan(
 		}
 
 		if (!existingContent) {
-			const actionType = modeSelection.outputKind === "skill" ? "convert" : "create";
+			const actionType = outputKind === "skill" ? "convert" : "create";
 			const managedEntry = {
 				name: command.name,
 				hash: outputHash,
@@ -758,7 +768,7 @@ async function buildTargetPlan(
 		}
 
 		if (previousEntry) {
-			const actionType = modeSelection.outputKind === "skill" ? "convert" : "update";
+			const actionType = outputKind === "skill" ? "convert" : "update";
 			const managedEntry = {
 				name: command.name,
 				hash: outputHash,
@@ -801,7 +811,7 @@ async function buildTargetPlan(
 
 		let backupPath: string | undefined;
 		if (conflictResolution === "rename") {
-			if (modeSelection.outputKind === "skill") {
+			if (outputKind === "skill") {
 				backupPath = await resolveSkillBackupPath(destinationPath);
 			} else {
 				let suffix = 1;
@@ -815,7 +825,7 @@ async function buildTargetPlan(
 			}
 		}
 
-		const actionType = modeSelection.outputKind === "skill" ? "convert" : "update";
+		const actionType = outputKind === "skill" ? "convert" : "update";
 		const managedEntry = {
 			name: command.name,
 			hash: outputHash,
@@ -862,10 +872,10 @@ async function buildTargetPlan(
 			const { destinationPath, containerDir } = resolveOutputPath(
 				entry.name,
 				destinationDir,
-				modeSelection.outputKind,
+				outputKind,
 				extension,
 			);
-			const removalPath = modeSelection.outputKind === "skill" ? containerDir : destinationPath;
+			const removalPath = outputKind === "skill" ? containerDir : destinationPath;
 			actions.push({
 				targetName,
 				action: "remove",
@@ -875,7 +885,7 @@ async function buildTargetPlan(
 			});
 			summary.remove += 1;
 
-			if (modeSelection.outputKind === "skill") {
+			if (outputKind === "skill") {
 				const legacyPath = path.join(destinationDir, `${entry.name}${extension}`);
 				if (legacyManagedNames.has(normalizeName(entry.name)) || (await pathExists(legacyPath))) {
 					actions.push({
@@ -902,8 +912,8 @@ async function buildTargetPlan(
 			targetName,
 			displayName,
 			scope,
-			mode: modeSelection.mode,
-			outputKind: modeSelection.outputKind,
+			mode: mode,
+			outputKind: outputKind,
 			destinationDir,
 			manifestPath,
 			legacyManifestPaths: Array.from(legacyManifestPaths),
@@ -918,25 +928,43 @@ async function buildTargetPlan(
 }
 
 export async function planSlashCommandSync(request: SyncRequest): Promise<SyncPlanDetails> {
+	const resolvedTargets =
+		request.resolvedTargets ??
+		resolveTargets({
+			config: request.config ?? null,
+			builtIns: BUILTIN_TARGETS,
+		}).targets;
+	const targetResolver = createTargetNameResolver(resolvedTargets);
+	const resolveTargetName = request.resolveTargetName ?? targetResolver.resolveTargetName;
 	const catalog = await loadCommandCatalog(request.repoRoot, {
 		includeLocal: !request.excludeLocal,
 		agentsDir: request.agentsDir,
+		resolveTargetName,
 	});
-	const selectedTargets =
+	const allTargetIds = resolvedTargets.map((target) => target.id);
+	const selectedTargets: ResolvedTarget[] =
 		request.targets && request.targets.length > 0
-			? request.targets
-			: SLASH_COMMAND_TARGETS.map((target) => target.name);
-	const validAgents = request.validAgents ?? SLASH_COMMAND_TARGETS.map((target) => target.name);
+			? request.targets.map((targetName) => {
+					const resolved = resolveTargetName(targetName);
+					if (!resolved) {
+						throw new Error(`Unknown slash command target: ${targetName}`);
+					}
+					const target = resolvedTargets.find((entry) => entry.id === resolved);
+					if (!target) {
+						throw new Error(`Unknown slash command target: ${targetName}`);
+					}
+					return target;
+				})
+			: resolvedTargets;
+	const selectedTargetIds = selectedTargets.map((target) => target.id);
+	const validAgents = request.validAgents ?? buildSupportedAgentNames(resolvedTargets);
 	const conflictResolution = request.conflictResolution ?? DEFAULT_CONFLICT_RESOLUTION;
-	const unsupportedFallback = request.unsupportedFallback ?? DEFAULT_UNSUPPORTED_FALLBACK;
-	const codexOption = request.codexOption ?? DEFAULT_CODEX_OPTION;
-	const codexConversionScope = request.codexConversionScope ?? DEFAULT_CODEX_CONVERSION_SCOPE;
 	const removeMissing = request.removeMissing ?? true;
 	const timestamp = new Date().toISOString();
 
 	const targetPlans: TargetPlan[] = [];
 	let conflicts = 0;
-	for (const targetName of selectedTargets) {
+	for (const target of selectedTargets) {
 		const { plan, conflicts: targetConflicts } = await buildTargetPlan(
 			{
 				request: {
@@ -945,21 +973,19 @@ export async function planSlashCommandSync(request: SyncRequest): Promise<SyncPl
 				},
 				commands: catalog.commands,
 				conflictResolution,
-				unsupportedFallback,
-				codexOption,
-				codexConversionScope,
 				removeMissing,
 				timestamp,
 				validAgents,
+				allTargets: allTargetIds,
 			},
-			targetName,
+			target,
 		);
 		conflicts += targetConflicts;
 		targetPlans.push(plan);
 	}
 
 	const actions = targetPlans.flatMap((plan) => plan.actions);
-	const planSummary = buildActionSummary(actions, selectedTargets);
+	const planSummary = buildActionSummary(actions, selectedTargetIds);
 	const targetSummaries: TargetPlanSummary[] = targetPlans.map((plan) => ({
 		targetName: plan.targetName,
 		displayName: plan.displayName,
@@ -975,7 +1001,7 @@ export async function planSlashCommandSync(request: SyncRequest): Promise<SyncPl
 		targetSummaries,
 		conflicts,
 		warnings: buildInvalidTargetWarnings(catalog.commands),
-		sourceCounts: buildSourceCounts(catalog.commands, selectedTargets, ALL_TARGET_NAMES, request),
+		sourceCounts: buildSourceCounts(catalog.commands, selectedTargetIds, allTargetIds, request),
 	};
 }
 
@@ -1214,19 +1240,15 @@ type CommandOutputCandidate = {
 
 function renderCommandOutput(
 	command: SlashCommandDefinition,
-	targetId: string,
 	outputKind: "command" | "skill",
+	outputPath: string,
 ): string {
 	if (outputKind === "skill") {
 		return renderSkillFromCommand(command);
 	}
-	if (targetId === "gemini") {
-		return renderGeminiCommand(command);
-	}
-	if (targetId === "codex") {
-		return renderCodexPrompt(command);
-	}
-	return renderClaudeCommand(command);
+	return getCommandFormat(outputPath) === "toml"
+		? renderTomlCommand(command)
+		: renderMarkdownCommand(command);
 }
 
 async function ensureBackupPath(outputPath: string): Promise<string> {
@@ -1553,8 +1575,8 @@ export async function syncSlashCommands(request: SyncRequestV2): Promise<SyncSum
 
 			const content = renderCommandOutput(
 				selected.templated,
-				selected.target.id,
 				selected.outputKind,
+				selected.outputPath,
 			);
 			if (selected.writer) {
 				const writeResult = await selected.writer.write({

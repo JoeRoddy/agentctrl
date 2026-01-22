@@ -39,7 +39,7 @@ export type CommandCatalog = {
 	repoRoot: string;
 	commandsPath: string;
 	localCommandsPath: string;
-	canonicalStandard: "claude_code";
+	canonicalStandard: "canonical";
 	commands: SlashCommandDefinition[];
 	sharedCommands: SlashCommandDefinition[];
 	localCommands: SlashCommandDefinition[];
@@ -239,7 +239,7 @@ export async function loadCommandCatalog(
 		repoRoot,
 		commandsPath,
 		localCommandsPath,
-		canonicalStandard: "claude_code",
+		canonicalStandard: "canonical",
 		commands,
 		sharedCommands,
 		localCommands,
