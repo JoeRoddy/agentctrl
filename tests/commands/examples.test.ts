@@ -1,4 +1,5 @@
 import { readdir, stat } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 const COMMANDS_DIR = new URL("../../src/cli/commands/", import.meta.url);
 const TESTS_DIR = new URL("./", import.meta.url);
@@ -24,7 +25,7 @@ describe("example CLI commands", () => {
 	it("has tests for each example command", async () => {
 		const commandTests = ["hello.test.ts", "greet.test.ts", "echo.test.ts"];
 		for (const testFile of commandTests) {
-			const filePath = new URL(testFile, TESTS_DIR).pathname;
+			const filePath = fileURLToPath(new URL(testFile, TESTS_DIR));
 			expect(await pathExists(filePath)).toBe(true);
 		}
 	});
