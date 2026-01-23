@@ -65,4 +65,78 @@ describe("CLI shim one-shot mode", () => {
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
 		expect(args).toEqual(["-p", "Flag wins"]);
 	});
+
+	it("applies shared flags in one-shot mode and warns on unsupported ones", async () => {
+		const spawn = createSpawnStub(0);
+		const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+
+		await runCli(
+			[
+				"node",
+				"omniagent",
+				"-p",
+				"Ship it",
+				"--agent",
+				"claude",
+				"--approval",
+				"auto-edit",
+				"--output",
+				"stream-json",
+				"--sandbox",
+				"off",
+				"--web",
+				"on",
+				"--model",
+				"claude-3-opus",
+			],
+			{
+				shim: {
+					stdinIsTTY: true,
+					spawn,
+				},
+			},
+		);
+
+		const [, args] = spawn.mock.calls[0] as SpawnCall;
+		expect(args).toEqual(["--approval", "auto-edit", "--model", "claude-3-opus", "-p", "Ship it"]);
+
+		const output = stderrSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
+		expect(output).toContain("does not support --output (stream-json)");
+		expect(output).toContain("does not support --sandbox (off)");
+		expect(output).toContain("does not support --web (on)");
+		expect(output).not.toContain("does not support --approval");
+		expect(output).not.toContain("does not support --model");
+		expect(spawn).toHaveBeenCalledTimes(1);
+
+		stderrSpy.mockRestore();
+	});
+
+	it("passes --approval auto-edit in one-shot mode for automation", async () => {
+		const spawn = createSpawnStub(0);
+		await runCli(
+			["node", "omniagent", "-p", "Run automation", "--agent", "codex", "--approval", "auto-edit"],
+			{
+				shim: {
+					stdinIsTTY: true,
+					spawn,
+				},
+			},
+		);
+
+		const [, args] = spawn.mock.calls[0] as SpawnCall;
+		expect(args).toEqual(["--approval", "auto-edit", "-p", "Run automation"]);
+	});
+
+	it("passes --yolo in one-shot mode without prompting", async () => {
+		const spawn = createSpawnStub(0);
+		await runCli(["node", "omniagent", "-p", "No prompts", "--agent", "codex", "--yolo"], {
+			shim: {
+				stdinIsTTY: true,
+				spawn,
+			},
+		});
+
+		const [, args] = spawn.mock.calls[0] as SpawnCall;
+		expect(args).toEqual(["--approval", "yolo", "--sandbox", "off", "-p", "No prompts"]);
+	});
 });

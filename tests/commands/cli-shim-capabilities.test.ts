@@ -1,6 +1,8 @@
 import { EventEmitter } from "node:events";
 import { runCli } from "../../src/cli/index.js";
 
+type SpawnCall = [string, string[], { stdio: string }];
+
 function createSpawnStub(exitCode = 0) {
 	return vi.fn((_command: string, _args: string[], _options: { stdio: string }) => {
 		const emitter = new EventEmitter();
@@ -55,6 +57,37 @@ describe("CLI shim capability warnings", () => {
 		expect(output).toContain("does not support --sandbox (off)");
 		expect(output).toContain("does not support --web (on)");
 		expect(output).not.toContain("does not support --model");
+		expect(spawn).toHaveBeenCalledTimes(1);
 		expect(exitSpy).not.toHaveBeenCalled();
+	});
+
+	it("warns when model is requested for an agent without model support", async () => {
+		const spawn = createSpawnStub(0);
+		await runCli(["node", "omniagent", "--agent", "copilot", "--model", "gpt-5"], {
+			shim: {
+				stdinIsTTY: true,
+				spawn,
+			},
+		});
+
+		const output = stderrSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
+		expect(output).toContain("does not support --model (gpt-5)");
+
+		const [, args] = spawn.mock.calls[0] as SpawnCall;
+		expect(args).toEqual([]);
+		expect(spawn).toHaveBeenCalledTimes(1);
+	});
+
+	it("uses per-agent prompt flag mappings", async () => {
+		const spawn = createSpawnStub(0);
+		await runCli(["node", "omniagent", "-p", "Hello Gemini", "--agent", "gemini"], {
+			shim: {
+				stdinIsTTY: true,
+				spawn,
+			},
+		});
+
+		const [, args] = spawn.mock.calls[0] as SpawnCall;
+		expect(args).toEqual(["--prompt", "Hello Gemini"]);
 	});
 });

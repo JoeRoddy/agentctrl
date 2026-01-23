@@ -61,4 +61,45 @@ describe("CLI shim passthrough", () => {
 
 		expect(exitCode).toBe(2);
 	});
+
+	it("places shim-translated flags before passthrough args", async () => {
+		const spawn = createSpawnStub(0);
+		await runCli(
+			[
+				"node",
+				"omniagent",
+				"-p",
+				"Hello",
+				"--agent",
+				"codex",
+				"--approval",
+				"auto-edit",
+				"--output",
+				"json",
+				"--",
+				"--some-flag",
+				"--extra",
+				"value",
+			],
+			{
+				shim: {
+					stdinIsTTY: true,
+					spawn,
+				},
+			},
+		);
+
+		const [, args] = spawn.mock.calls[0] as SpawnCall;
+		expect(args).toEqual([
+			"--approval",
+			"auto-edit",
+			"--output",
+			"json",
+			"-p",
+			"Hello",
+			"--some-flag",
+			"--extra",
+			"value",
+		]);
+	});
 });

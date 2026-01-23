@@ -90,4 +90,20 @@ describe("CLI shim interactive mode", () => {
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
 		expect(args).toEqual(["--approval", "prompt", "--output", "json", "--model", "gpt-5"]);
 	});
+
+	it("returns invalid usage when no default agent is configured", async () => {
+		await withTempRepo(async (root) => {
+			const spawn = createSpawnStub(0);
+			await runCli(["node", "omniagent"], {
+				shim: {
+					repoRoot: root,
+					stdinIsTTY: true,
+					spawn,
+				},
+			});
+
+			expect(exitSpy).toHaveBeenCalledWith(2);
+			expect(spawn).not.toHaveBeenCalled();
+		});
+	});
 });

@@ -28,6 +28,8 @@ describe("CLI root command", () => {
 		expect(output).toContain("omniagent CLI");
 		expect(output).toContain("Commands:");
 		expect(output).toContain("Options:");
+		expect(output).toContain("Capabilities by agent:");
+		expect(output).toContain("Unsupported shared flags for a selected agent emit a warning");
 		expect(exitSpy).not.toHaveBeenCalled();
 	});
 
