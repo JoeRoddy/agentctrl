@@ -31,39 +31,32 @@ async function buildInvocation(argv: string[], options: InvocationOptions = {}) 
 }
 
 describe("CLI shim execution", () => {
-	it.each(["json", "stream-json"])(
-		"passes %s output flags through with stdio inherit",
-		async (format) => {
-			const invocation = await buildInvocation(["--agent", "codex", "--output", format]);
-			const spawn = createSpawnStub(0);
-			const stderr = { write: vi.fn(() => true) } as unknown as NodeJS.WriteStream;
+	it.each([
+		"json",
+		"stream-json",
+	])("passes %s output flags through with stdio inherit", async (format) => {
+		const invocation = await buildInvocation(["--agent", "codex", "--output", format]);
+		const spawn = createSpawnStub(0);
+		const stderr = { write: vi.fn(() => true) } as unknown as NodeJS.WriteStream;
 
-			const result = await executeInvocation(invocation, { spawn, stderr });
+		const result = await executeInvocation(invocation, { spawn, stderr });
 
-			const [command, args, options] = spawn.mock.calls[0] as SpawnCall;
-			expect(command).toBe("codex");
-			expect(args).toEqual(["--output", format]);
-			expect(options).toEqual({ stdio: "inherit" });
-			expect(result).toEqual({ exitCode: 0, reason: "success" });
-		},
-	);
+		const [command, args, options] = spawn.mock.calls[0] as SpawnCall;
+		expect(command).toBe("codex");
+		expect(args).toEqual(["--output", format]);
+		expect(options).toEqual({ stdio: "inherit" });
+		expect(result).toEqual({ exitCode: 0, reason: "success" });
+	});
 
 	it("warns when output is unsupported but still executes with stdio inherit", async () => {
-		const invocation = await buildInvocation([
-			"--agent",
-			"claude",
-			"--output",
-			"stream-json",
-		]);
+		const invocation = await buildInvocation(["--agent", "claude", "--output", "stream-json"]);
 		const spawn = createSpawnStub(0);
 		const stderrWrite = vi.fn(() => true);
 		const stderr = { write: stderrWrite } as unknown as NodeJS.WriteStream;
 
 		const result = await executeInvocation(invocation, { spawn, stderr });
 
-		const output = stderrWrite.mock.calls
-			.map(([chunk]) => String(chunk))
-			.join("");
+		const output = stderrWrite.mock.calls.map(([chunk]) => String(chunk)).join("");
 		expect(output).toContain("does not support --output (stream-json)");
 
 		const [, args, options] = spawn.mock.calls[0] as SpawnCall;
@@ -86,9 +79,7 @@ describe("CLI shim execution", () => {
 
 		const result = await executeInvocation(invocation, { spawn, stderr });
 
-		const output = stderrWrite.mock.calls
-			.map(([chunk]) => String(chunk))
-			.join("");
+		const output = stderrWrite.mock.calls.map(([chunk]) => String(chunk)).join("");
 		expect(output).toContain("Error: boom");
 		expect(result).toEqual({ exitCode: 1, reason: "execution-error" });
 	});

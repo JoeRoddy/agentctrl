@@ -124,12 +124,7 @@ describe("CLI shim flag parsing", () => {
 	});
 
 	it("warns when stream-json output is unsupported", async () => {
-		const invocation = await buildInvocation([
-			"--agent",
-			"claude",
-			"--output",
-			"stream-json",
-		]);
+		const invocation = await buildInvocation(["--agent", "claude", "--output", "stream-json"]);
 		const result = buildAgentArgs(invocation);
 
 		expect(result.warnings).toContain(
