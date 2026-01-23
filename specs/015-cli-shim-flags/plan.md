@@ -12,8 +12,8 @@
 Define the omniagent CLI shim flag surface for interactive and one-shot execution, including
 approval policy, sandbox defaults, output formats, model selection, web search permission, and
 agent passthrough. Parse flags consistently across modes, resolve the agent from `--agent` or
-`omniagent.config.*`, translate shim flags to agent CLI args, enforce invalid-usage errors, and
-pass through agent output unmodified.
+`omniagent.config.*`, translate shim flags to agent CLI args via a capability matrix, warn on
+unsupported flags (no-op), enforce invalid-usage errors, and pass through agent output unmodified.
 
 ## Technical Context
 
@@ -32,7 +32,8 @@ pass through agent output unmodified.
 **Performance Goals**: Interactive start <2s (SC-001); CLI parsing + config resolution <200ms for
 standard repos  
 **Constraints**: CLI-first adapter; deterministic flag resolution; no silent passthrough; output
-passed through unmodified; exit codes mapped to spec; <100MB memory  
+passed through unmodified; unsupported shared flags warn + no-op via capability matrix; exit
+codes mapped to spec; <100MB memory  
 **Scale/Scope**: Local CLI invocations with tens of flags and small config files
 
 ## Constitution Check
@@ -43,8 +44,8 @@ passed through unmodified; exit codes mapped to spec; <100MB memory
   CLIs; omniagent still does not host or orchestrate models).
 - Markdown-first, human-readable output: PASS (canonical sources remain Markdown; CLI output can be
   text or JSON without proprietary formats).
-- Explicit lossy mapping transparency: PASS (unsupported flags/values fail validation; passthrough
-  is explicit via `--`).
+- Explicit lossy mapping transparency: PASS (invalid shim flags/values fail validation; agent-
+  unsupported shared flags warn + no-op; passthrough is explicit via `--`).
 - Test-driven validation: PASS (plan adds CLI parsing + exit code + passthrough tests).
 - Predictable resolution order: PASS (agent resolution documented: `--agent` flag, then
   `omniagent.config.*` default).
@@ -78,6 +79,15 @@ Post-Phase-1 Check: PASS (no new violations introduced in design artifacts).
 /Users/joeroddy/Documents/dev/projects/open-source/omniagent/src/
 ├── cli/
 │   ├── commands/
+│   ├── shim/
+│   │   ├── agent-capabilities.ts
+│   │   ├── build-args.ts
+│   │   ├── errors.ts
+│   │   ├── execute.ts
+│   │   ├── flags.ts
+│   │   ├── index.ts
+│   │   ├── resolve-invocation.ts
+│   │   └── types.ts
 │   └── index.ts
 ├── lib/
 │   ├── agents-dir.ts

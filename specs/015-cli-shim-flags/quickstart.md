@@ -51,6 +51,7 @@ omniagent -p "Refactor this" --agent claude --yolo --web --output stream-json
 Notes:
 - `--yolo` defaults `--sandbox` to `off` unless `--sandbox` is explicitly provided.
 - `--web` enables web access but the agent may still choose not to use it.
+- Unsupported shared flags for the selected agent emit a warning and are ignored (no-op).
 
 ## 5) Pass agent-specific flags through
 
