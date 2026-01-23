@@ -39,9 +39,17 @@ export async function executeInvocation(
 		child.on("exit", (code) => {
 			if (code === 0) {
 				resolve({ exitCode: 0, reason: "success" });
-			} else {
-				resolve({ exitCode: 1, reason: "execution-error" });
+				return;
 			}
+			if (code === 2) {
+				resolve({ exitCode: 2, reason: "invalid-usage" });
+				return;
+			}
+			if (code === 3) {
+				resolve({ exitCode: 3, reason: "blocked" });
+				return;
+			}
+			resolve({ exitCode: 1, reason: "execution-error" });
 		});
 	});
 }

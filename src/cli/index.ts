@@ -52,8 +52,11 @@ type RunCliOptions = {
 };
 
 function isCommandInvocation(args: string[]): boolean {
-	const command = args.find((arg) => !arg.startsWith("-"));
-	return !!command && KNOWN_COMMANDS.has(command);
+	const command = args[0];
+	if (!command || command.startsWith("-")) {
+		return false;
+	}
+	return KNOWN_COMMANDS.has(command);
 }
 
 export function runCli(argv = process.argv, options: RunCliOptions = {}) {

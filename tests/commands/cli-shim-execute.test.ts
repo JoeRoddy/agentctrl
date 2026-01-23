@@ -88,7 +88,7 @@ describe("CLI shim execution", () => {
 		vi.resetModules();
 		const { BlockedError } = await import("../../src/cli/shim/errors.js");
 		vi.doMock("../../src/cli/shim/resolve-invocation.js", () => ({
-			resolveInvocation: async () => {
+			resolveInvocationFromFlags: async () => {
 				throw new BlockedError("Blocked by approval policy.");
 			},
 		}));
@@ -112,5 +112,20 @@ describe("CLI shim execution", () => {
 		expect(stderrWrites.join("")).toContain("Blocked by approval policy.");
 
 		vi.doUnmock("../../src/cli/shim/resolve-invocation.js");
+	});
+
+	it.each([
+		{ label: "invalid usage", code: 2, reason: "invalid-usage" },
+		{ label: "blocked", code: 3, reason: "blocked" },
+	])("propagates %s exit codes from the agent", async ({ code, reason }) => {
+		const invocation = await buildInvocation(["--agent", "codex"]);
+		const spawn = createSpawnStub(code);
+		const stderr = { write: vi.fn(() => true) } as unknown as NodeJS.WriteStream;
+
+		const result = await executeInvocation(invocation, { spawn, stderr });
+
+		const [, , options] = spawn.mock.calls[0] as SpawnCall;
+		expect(options).toEqual({ stdio: "inherit" });
+		expect(result).toEqual({ exitCode: code, reason });
 	});
 });

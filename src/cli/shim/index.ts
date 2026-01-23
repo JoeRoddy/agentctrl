@@ -1,7 +1,8 @@
 import { findRepoRoot } from "../../lib/repo-root.js";
 import { exitCodeFor, ShimError } from "./errors.js";
 import { type ExecuteOptions, executeInvocation } from "./execute.js";
-import { resolveInvocation } from "./resolve-invocation.js";
+import { parseShimFlags } from "./flags.js";
+import { resolveInvocationFromFlags } from "./resolve-invocation.js";
 
 type ShimRuntime = {
 	stdin?: NodeJS.ReadStream;
@@ -31,20 +32,22 @@ export async function runShim(argv: string[], runtime: ShimRuntime = {}): Promis
 	const repoRoot = runtime.repoRoot ?? (await findRepoRoot(process.cwd())) ?? process.cwd();
 	const stdinIsTTY = runtime.stdinIsTTY ?? stdin.isTTY ?? false;
 
-	let stdinText = runtime.stdinText ?? null;
-	if (!stdinIsTTY && stdinText === null) {
-		try {
-			stdinText = await readStreamText(stdin);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			stderr.write(`Error: Failed to read stdin. ${message}\n`);
-			return exitCodeFor("execution-error");
-		}
-	}
-
 	try {
-		const invocation = await resolveInvocation({
-			argv,
+		const flags = parseShimFlags(argv);
+		let stdinText = runtime.stdinText ?? null;
+		const shouldReadStdin = !stdinIsTTY && stdinText === null && !flags.promptExplicit;
+		if (shouldReadStdin) {
+			try {
+				stdinText = await readStreamText(stdin);
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				stderr.write(`Error: Failed to read stdin. ${message}\n`);
+				return exitCodeFor("execution-error");
+			}
+		}
+
+		const invocation = await resolveInvocationFromFlags({
+			flags,
 			stdinIsTTY,
 			stdinText,
 			repoRoot,
