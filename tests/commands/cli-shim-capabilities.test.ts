@@ -89,6 +89,6 @@ describe("CLI shim capability warnings", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["--prompt", "Hello Gemini"]);
+		expect(args).toEqual(["-p", "Hello Gemini"]);
 	});
 });

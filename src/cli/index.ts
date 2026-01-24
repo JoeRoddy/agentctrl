@@ -13,8 +13,8 @@ const KNOWN_COMMANDS = new Set(["hello", "greet", "echo", "sync"]);
 const SHIM_CAPABILITIES = [
 	"Capabilities by agent:",
 	"  codex: approval, sandbox, output, model, web",
-	"  claude: approval, model",
-	"  gemini: approval, model, web",
+	"  claude: approval, output, model",
+	"  gemini: approval, sandbox, output, model, web",
 	"  copilot: approval",
 	"Unsupported shared flags for a selected agent emit a warning and are ignored.",
 ].join("\n");
@@ -91,7 +91,7 @@ export function runCli(argv = process.argv, options: RunCliOptions = {}) {
 			"omniagent CLI",
 			(yargsInstance) =>
 				yargsInstance
-					.usage("omniagent [flags] --agent <claude|codex|gemini|copilot> [-- <agent flags>]")
+					.usage("omniagent [flags] --agent <target-id> [-- <agent flags>]")
 					.example("omniagent --agent codex", "Start an interactive session (default mode).")
 					.example('omniagent -p "Summarize the repo" --agent codex', "Run a one-shot prompt.")
 					.example("omniagent --agent codex -- --some-flag", "Pass through agent-specific flags.")
@@ -139,7 +139,7 @@ export function runCli(argv = process.argv, options: RunCliOptions = {}) {
 					})
 					.option("agent", {
 						type: "string",
-						describe: "Select the agent (claude, codex, gemini, copilot).",
+						describe: "Select the agent (built-in id or configured alias).",
 					})
 					.epilog(SHIM_CAPABILITIES),
 			async () => {

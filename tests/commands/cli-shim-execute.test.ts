@@ -36,7 +36,14 @@ describe("CLI shim execution", () => {
 		"json",
 		"stream-json",
 	])("passes %s output flags through with stdio inherit", async (format) => {
-		const invocation = await buildInvocation(["--agent", "codex", "--output", format]);
+		const invocation = await buildInvocation([
+			"--agent",
+			"codex",
+			"--output",
+			format,
+			"-p",
+			"Hello",
+		]);
 		const spawn = createSpawnStub(0);
 		const stderr = { write: vi.fn(() => true) } as unknown as NodeJS.WriteStream;
 
@@ -44,7 +51,7 @@ describe("CLI shim execution", () => {
 
 		const [command, args, options] = spawn.mock.calls[0] as SpawnCall;
 		expect(command).toBe("codex");
-		expect(args).toEqual(["--output", format]);
+		expect(args).toEqual(["exec", "--json", "Hello"]);
 		expect(options).toEqual({ stdio: "inherit" });
 		expect(result).toEqual({ exitCode: 0, reason: "success" });
 	});

@@ -1,15 +1,15 @@
-import type { AgentId } from "../../lib/targets/config-types.js";
+import type { ResolvedTarget } from "../../lib/targets/config-types.js";
+import {
+	APPROVAL_POLICIES,
+	type ApprovalPolicy,
+	type InvocationMode,
+	OUTPUT_FORMATS,
+	type OutputFormat,
+	SANDBOX_MODES,
+	type SandboxMode,
+} from "../../lib/targets/config-types.js";
 
-export const APPROVAL_POLICIES = ["prompt", "auto-edit", "yolo"] as const;
-export type ApprovalPolicy = (typeof APPROVAL_POLICIES)[number];
-
-export const SANDBOX_MODES = ["workspace-write", "off"] as const;
-export type SandboxMode = (typeof SANDBOX_MODES)[number];
-
-export const OUTPUT_FORMATS = ["text", "json", "stream-json"] as const;
-export type OutputFormat = (typeof OUTPUT_FORMATS)[number];
-
-export type InvocationMode = "interactive" | "one-shot";
+export { APPROVAL_POLICIES, OUTPUT_FORMATS, SANDBOX_MODES };
 
 export type FlagSource = "default" | "flag" | "alias" | "derived";
 
@@ -32,7 +32,7 @@ export type ParsedShimFlags = {
 	modelExplicit: boolean;
 	web: boolean;
 	webExplicit: boolean;
-	agent: AgentId | null;
+	agent: string | null;
 	agentExplicit: boolean;
 	help: boolean;
 	version: boolean;
@@ -50,7 +50,7 @@ export type SessionConfiguration = {
 };
 
 export type AgentSelection = {
-	id: AgentId;
+	id: string;
 	source: "flag" | "config";
 	configPath: string | null;
 };
@@ -73,6 +73,7 @@ export type ResolvedInvocation = {
 	prompt: string | null;
 	usesPipedStdin: boolean;
 	agent: AgentSelection;
+	target: ResolvedTarget;
 	session: SessionConfiguration;
 	requests: FlagRequests;
 	passthrough: AgentPassthrough;

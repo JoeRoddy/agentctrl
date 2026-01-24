@@ -3,6 +3,22 @@ import type { TargetDefinition } from "../../config-types.js";
 export const copilotTarget: TargetDefinition = {
 	id: "copilot",
 	displayName: "GitHub Copilot CLI",
+	cli: {
+		modes: {
+			interactive: { command: "copilot" },
+			oneShot: { command: "copilot" },
+		},
+		prompt: { type: "flag", flag: ["-p"] },
+		flags: {
+			approval: {
+				values: {
+					prompt: null,
+					"auto-edit": null,
+					yolo: ["--allow-all-tools"],
+				},
+			},
+		},
+	},
 	outputs: {
 		skills: "{repoRoot}/.github/skills/{itemName}",
 		subagents: {

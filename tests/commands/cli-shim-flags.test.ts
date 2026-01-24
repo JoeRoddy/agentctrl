@@ -101,7 +101,7 @@ describe("CLI shim flag parsing", () => {
 			{ argv: ["--approval", "nope"], message: "Invalid value for --approval" },
 			{ argv: ["--sandbox", "nope"], message: "Invalid value for --sandbox" },
 			{ argv: ["--web", "maybe"], message: "Invalid value for --web" },
-			{ argv: ["--agent", "nope"], message: "Invalid value for --agent" },
+			{ argv: ["--agent", "unknown-target"], message: "Unknown or disabled target" },
 		];
 
 		for (const { argv, message } of cases) {
@@ -125,11 +125,11 @@ describe("CLI shim flag parsing", () => {
 	});
 
 	it("warns when stream-json output is unsupported", async () => {
-		const invocation = await buildInvocation(["--agent", "claude", "--output", "stream-json"]);
+		const invocation = await buildInvocation(["--agent", "copilot", "--output", "stream-json"]);
 		const result = buildAgentArgs(invocation);
 
 		expect(result.warnings).toContain(
-			"Warning: claude does not support --output (stream-json); ignoring.",
+			"Warning: copilot does not support --output (stream-json); ignoring.",
 		);
 		expect(result.args).toEqual([]);
 	});
@@ -138,8 +138,8 @@ describe("CLI shim flag parsing", () => {
 		const invocation = await buildInvocation(["--agent", "codex", "--web"]);
 		const result = buildAgentArgs(invocation);
 
-		expect(result.shimArgs).toEqual(["--web", "on"]);
-		expect(result.args).toEqual(["--web", "on"]);
+		expect(result.shimArgs).toEqual(["--search"]);
+		expect(result.args).toEqual(["--search"]);
 	});
 
 	it("resolves mode/output for common flag combinations", async () => {

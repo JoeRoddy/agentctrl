@@ -92,15 +92,13 @@ describe("CLI shim passthrough", () => {
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
 		expect(args).toEqual([
-			"--approval",
-			"auto-edit",
-			"--output",
-			"json",
-			"-p",
-			"Hello",
+			"exec",
+			"--full-auto",
+			"--json",
 			"--some-flag",
 			"--extra",
 			"value",
+			"Hello",
 		]);
 	});
 });

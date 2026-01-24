@@ -35,7 +35,7 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["-p", "Hello"]);
+		expect(args).toEqual(["exec", "Hello"]);
 		expect(exitSpy).not.toHaveBeenCalled();
 	});
 
@@ -50,7 +50,7 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["-p", "From stdin"]);
+		expect(args).toEqual(["exec", "From stdin"]);
 	});
 
 	it("prefers --prompt over piped stdin when both are present", async () => {
@@ -64,7 +64,7 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["-p", "Flag wins"]);
+		expect(args).toEqual(["exec", "Flag wins"]);
 	});
 
 	it("ignores piped stdin when --prompt is explicit", async () => {
@@ -113,13 +113,19 @@ describe("CLI shim one-shot mode", () => {
 		);
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["--approval", "auto-edit", "--model", "claude-3-opus", "-p", "Ship it"]);
+		expect(args).toEqual([
+			"--output-format",
+			"stream-json",
+			"--model",
+			"claude-3-opus",
+			"-p",
+			"Ship it",
+		]);
 
 		const output = stderrSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
-		expect(output).toContain("does not support --output (stream-json)");
 		expect(output).toContain("does not support --sandbox (off)");
 		expect(output).toContain("does not support --web (on)");
-		expect(output).not.toContain("does not support --approval");
+		expect(output).toContain("does not support --approval (auto-edit)");
 		expect(output).not.toContain("does not support --model");
 		expect(spawn).toHaveBeenCalledTimes(1);
 
@@ -139,7 +145,7 @@ describe("CLI shim one-shot mode", () => {
 		);
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["--approval", "auto-edit", "-p", "Run automation"]);
+		expect(args).toEqual(["exec", "--full-auto", "Run automation"]);
 	});
 
 	it("passes --yolo in one-shot mode without prompting", async () => {
@@ -152,6 +158,6 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["--approval", "yolo", "--sandbox", "off", "-p", "No prompts"]);
+		expect(args).toEqual(["exec", "--yolo", "--sandbox", "off", "No prompts"]);
 	});
 });

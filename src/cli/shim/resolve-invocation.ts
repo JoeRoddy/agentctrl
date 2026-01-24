@@ -1,4 +1,7 @@
-import { resolveDefaultAgent } from "../../lib/targets/default-agent.js";
+import { BUILTIN_TARGETS } from "../../lib/targets/builtins.js";
+import { loadTargetConfig } from "../../lib/targets/config-loader.js";
+import { validateTargetConfig } from "../../lib/targets/config-validate.js";
+import { resolveTargets } from "../../lib/targets/resolve-targets.js";
 import { InvalidUsageError } from "./errors.js";
 import { parseShimFlags } from "./flags.js";
 import type {
@@ -8,6 +11,11 @@ import type {
 	ResolvedInvocation,
 	SessionConfiguration,
 } from "./types.js";
+
+type AgentResolution = {
+	selection: AgentSelection;
+	targetId: string;
+};
 
 type ResolveInvocationOptions = {
 	argv: string[];
@@ -64,39 +72,82 @@ function buildSession(flags: ParsedShimFlags): SessionConfiguration {
 	};
 }
 
+function normalizeKey(value: string): string {
+	return value.trim().toLowerCase();
+}
+
 async function resolveAgentSelection(
 	flags: ParsedShimFlags,
 	repoRoot: string,
 	agentsDir?: string | null,
-): Promise<AgentSelection> {
-	if (flags.agentExplicit && flags.agent) {
-		return {
-			id: flags.agent,
-			source: "flag",
-			configPath: null,
-		};
-	}
-
+): Promise<{ resolution: AgentResolution; targetMap: ReturnType<typeof resolveTargets> }> {
 	if (flags.hasDelimiter && !flags.agentExplicit) {
 		throw new InvalidUsageError("Using -- requires --agent.");
 	}
 
-	const resolution = await resolveDefaultAgent({ repoRoot, agentsDir });
-	if (resolution.status === "resolved") {
-		return {
-			id: resolution.id,
-			source: resolution.source,
-			configPath: resolution.configPath,
+	const { config, configPath } = await loadTargetConfig({ repoRoot, agentsDir });
+	let resolvedConfig = config;
+	if (config) {
+		const validation = validateTargetConfig({ config, builtIns: BUILTIN_TARGETS });
+		if (!validation.valid || !validation.config) {
+			const details = validation.errors.length > 0 ? ` ${validation.errors.join(" ")}` : "";
+			const path = configPath ? ` (${configPath})` : "";
+			throw new InvalidUsageError(`Invalid agent config${path}.${details}`);
+		}
+		resolvedConfig = validation.config;
+	}
+
+	const targetMap = resolveTargets({ config: resolvedConfig, builtIns: BUILTIN_TARGETS });
+	const aliasToId = targetMap.aliasToId;
+	const byId = targetMap.byId;
+
+	let resolvedId: string | null = null;
+	let selection: AgentSelection | null = null;
+
+	if (flags.agentExplicit && flags.agent) {
+		const key = normalizeKey(flags.agent);
+		const mapped = aliasToId.get(key);
+		if (!mapped) {
+			throw new InvalidUsageError(`Unknown or disabled target: ${flags.agent}.`);
+		}
+		resolvedId = mapped;
+		selection = {
+			id: mapped,
+			source: "flag",
+			configPath: null,
 		};
+	} else if (resolvedConfig?.defaultAgent) {
+		const key = normalizeKey(resolvedConfig.defaultAgent);
+		const mapped = aliasToId.get(key);
+		if (!mapped) {
+			const path = configPath ? ` (${configPath})` : "";
+			throw new InvalidUsageError(`Invalid defaultAgent${path}: ${resolvedConfig.defaultAgent}.`);
+		}
+		resolvedId = mapped;
+		selection = {
+			id: mapped,
+			source: "config",
+			configPath: configPath ?? null,
+		};
+	} else {
+		throw new InvalidUsageError(
+			"Missing --agent flag and no defaultAgent found in omniagent.config.*.",
+		);
 	}
-	if (resolution.status === "invalid") {
-		const details = resolution.errors.length > 0 ? ` ${resolution.errors.join(" ")}` : "";
-		const path = resolution.configPath ? ` (${resolution.configPath})` : "";
-		throw new InvalidUsageError(`Invalid agent config${path}.${details}`);
+
+	if (!resolvedId || !selection) {
+		throw new InvalidUsageError("Unable to resolve target selection.");
 	}
-	throw new InvalidUsageError(
-		"Missing --agent flag and no defaultAgent found in omniagent.config.*.",
-	);
+
+	const target = byId.get(normalizeKey(resolvedId));
+	if (!target) {
+		throw new InvalidUsageError(`Unknown or disabled target: ${resolvedId}.`);
+	}
+	if (!target.cli) {
+		throw new InvalidUsageError(`Target ${resolvedId} is missing cli configuration.`);
+	}
+
+	return { resolution: { selection, targetId: resolvedId }, targetMap };
 }
 
 export async function resolveInvocation(
@@ -114,7 +165,17 @@ export async function resolveInvocationFromFlags(
 	const prompt = flags.promptExplicit ? flags.prompt : usesPipedStdin ? (stdinText ?? "") : null;
 	const mode = flags.promptExplicit || usesPipedStdin ? "one-shot" : "interactive";
 
-	const agent = await resolveAgentSelection(flags, options.repoRoot, options.agentsDir);
+	const { resolution, targetMap } = await resolveAgentSelection(
+		flags,
+		options.repoRoot,
+		options.agentsDir,
+	);
+	const target = targetMap.byId.get(normalizeKey(resolution.targetId));
+	if (!target) {
+		throw new InvalidUsageError(`Unknown or disabled target: ${resolution.targetId}.`);
+	}
+
+	const agent = resolution.selection;
 	const session = buildSession(flags);
 	const requests = buildRequests(flags);
 
@@ -123,6 +184,7 @@ export async function resolveInvocationFromFlags(
 		prompt,
 		usesPipedStdin,
 		agent,
+		target,
 		session,
 		requests,
 		passthrough: {

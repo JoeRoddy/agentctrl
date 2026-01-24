@@ -1,12 +1,12 @@
 import { BUILTIN_TARGETS } from "./builtins.js";
 import { loadTargetConfig } from "./config-loader.js";
-import type { AgentId } from "./config-types.js";
 import { validateTargetConfig } from "./config-validate.js";
+import { resolveTargets } from "./resolve-targets.js";
 
 export type DefaultAgentResolution =
 	| {
 			status: "resolved";
-			id: AgentId;
+			id: string;
 			source: "config";
 			configPath: string;
 	  }
@@ -43,9 +43,20 @@ export async function resolveDefaultAgent(options: {
 		return { status: "missing", configPath };
 	}
 
+	const resolved = resolveTargets({ config: validation.config, builtIns: BUILTIN_TARGETS });
+	const key = defaultAgent.trim().toLowerCase();
+	const resolvedId = resolved.aliasToId.get(key);
+	if (!resolvedId) {
+		return {
+			status: "invalid",
+			configPath,
+			errors: [`defaultAgent must match a configured target or alias (${defaultAgent}).`],
+		};
+	}
+
 	return {
 		status: "resolved",
-		id: defaultAgent,
+		id: resolvedId,
 		source: "config",
 		configPath,
 	};

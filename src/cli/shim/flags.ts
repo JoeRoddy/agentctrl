@@ -1,4 +1,3 @@
-import { AGENT_IDS, type AgentId } from "../../lib/targets/config-types.js";
 import { InvalidUsageError } from "./errors.js";
 import {
 	APPROVAL_POLICIES,
@@ -86,7 +85,7 @@ export function parseShimFlags(argv: string[]): ParsedShimFlags {
 	let modelExplicit = false;
 	let web = false;
 	let webExplicit = false;
-	let agent: AgentId | null = null;
+	let agent: string | null = null;
 	let agentExplicit = false;
 	let help = false;
 	let version = false;
@@ -215,24 +214,14 @@ export function parseShimFlags(argv: string[]): ParsedShimFlags {
 		if (arg === "--agent") {
 			const [value, nextIndex] = readFlagValue(preArgs, index, "--agent");
 			const normalized = normalizeValue(value, "--agent").toLowerCase();
-			if (!AGENT_IDS.includes(normalized as AgentId)) {
-				throw new InvalidUsageError(
-					`Invalid value for --agent. Allowed values: ${AGENT_IDS.join(", ")}.`,
-				);
-			}
-			agent = normalized as AgentId;
+			agent = normalized;
 			agentExplicit = true;
 			index = nextIndex;
 			continue;
 		}
 		if (arg.startsWith("--agent=")) {
 			const normalized = normalizeValue(arg.slice("--agent=".length), "--agent").toLowerCase();
-			if (!AGENT_IDS.includes(normalized as AgentId)) {
-				throw new InvalidUsageError(
-					`Invalid value for --agent. Allowed values: ${AGENT_IDS.join(", ")}.`,
-				);
-			}
-			agent = normalized as AgentId;
+			agent = normalized;
 			agentExplicit = true;
 			continue;
 		}

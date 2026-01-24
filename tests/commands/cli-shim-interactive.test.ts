@@ -68,18 +68,7 @@ describe("CLI shim interactive mode", () => {
 	it("applies shared flags in interactive mode when supported", async () => {
 		const spawn = createSpawnStub(0);
 		await runCli(
-			[
-				"node",
-				"omniagent",
-				"--agent",
-				"codex",
-				"--model",
-				"gpt-5",
-				"--output",
-				"json",
-				"--approval",
-				"prompt",
-			],
+			["node", "omniagent", "--agent", "codex", "--model", "gpt-5", "--approval", "prompt"],
 			{
 				shim: {
 					stdinIsTTY: true,
@@ -89,7 +78,7 @@ describe("CLI shim interactive mode", () => {
 		);
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["--approval", "prompt", "--output", "json", "--model", "gpt-5"]);
+		expect(args).toEqual(["--ask-for-approval", "on-request", "-m", "gpt-5"]);
 	});
 
 	it("returns invalid usage when no default agent is configured", async () => {
