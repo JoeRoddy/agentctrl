@@ -96,6 +96,13 @@ describe("CLI shim flag parsing", () => {
 		}
 	});
 
+	it("enables translation tracing when requested", () => {
+		expect(parseShimFlags([]).traceTranslate).toBe(false);
+		expect(parseShimFlags(["--trace-translate"]).traceTranslate).toBe(true);
+		expect(parseShimFlags(["--trace-translate=1"]).traceTranslate).toBe(true);
+		expect(parseShimFlags(["--trace-translate=false"]).traceTranslate).toBe(false);
+	});
+
 	it("returns invalid usage for bad flag values", async () => {
 		const cases = [
 			{ argv: ["--approval", "nope"], message: "Invalid value for --approval" },

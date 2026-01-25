@@ -62,6 +62,7 @@ export async function runShim(argv: string[], runtime: ShimRuntime = {}): Promis
 			spawn: runtime.spawn,
 			stderr,
 			stdio,
+			traceTranslate: flags.traceTranslate,
 		});
 		return result.exitCode;
 	} catch (error) {

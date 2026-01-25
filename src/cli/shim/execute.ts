@@ -14,14 +14,29 @@ export type ExecuteOptions = {
 	spawn?: SpawnFn;
 	stderr?: NodeJS.WriteStream;
 	stdio?: StdioOptions;
+	traceTranslate?: boolean;
 };
 
 export async function executeInvocation(
 	invocation: ResolvedInvocation,
 	options: ExecuteOptions = {},
 ): Promise<ExecuteResult> {
-	const { command, args, warnings } = buildAgentArgs(invocation);
+	const { command, args, warnings, shimArgs, passthroughArgs } = buildAgentArgs(invocation);
 	const stderr = options.stderr ?? process.stderr;
+
+	if (options.traceTranslate) {
+		const trace = {
+			agent: invocation.agent.id,
+			mode: invocation.mode,
+			command,
+			args,
+			shimArgs,
+			passthroughArgs,
+			warnings,
+			requests: invocation.requests,
+		};
+		stderr.write(`OA_TRANSLATION=${JSON.stringify(trace)}\n`);
+	}
 
 	for (const warning of warnings) {
 		stderr.write(`${warning}\n`);

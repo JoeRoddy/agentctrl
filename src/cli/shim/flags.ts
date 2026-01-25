@@ -87,6 +87,7 @@ export function parseShimFlags(argv: string[]): ParsedShimFlags {
 	let webExplicit = false;
 	let agent: string | null = null;
 	let agentExplicit = false;
+	let traceTranslate = false;
 	let help = false;
 	let version = false;
 	const outputSelections: OutputFormat[] = [];
@@ -225,6 +226,17 @@ export function parseShimFlags(argv: string[]): ParsedShimFlags {
 			agentExplicit = true;
 			continue;
 		}
+		if (arg === "--trace-translate") {
+			traceTranslate = true;
+			continue;
+		}
+		if (arg.startsWith("--trace-translate=")) {
+			traceTranslate = parseBooleanValue(
+				"--trace-translate",
+				arg.slice("--trace-translate=".length),
+			);
+			continue;
+		}
 
 		if (arg.startsWith("-")) {
 			throw new InvalidUsageError(`Unknown option: ${arg}`);
@@ -254,6 +266,7 @@ export function parseShimFlags(argv: string[]): ParsedShimFlags {
 		webExplicit,
 		agent,
 		agentExplicit,
+		traceTranslate,
 		help,
 		version,
 		hasDelimiter,

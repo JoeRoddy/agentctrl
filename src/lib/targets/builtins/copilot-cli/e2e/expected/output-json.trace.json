@@ -1,0 +1,11 @@
+{
+  "command": "copilot",
+  "args": [
+    "-p",
+    "marco",
+    "--silent"
+  ],
+  "warnings": [
+    "Warning: copilot does not support --output (json); ignoring."
+  ]
+}

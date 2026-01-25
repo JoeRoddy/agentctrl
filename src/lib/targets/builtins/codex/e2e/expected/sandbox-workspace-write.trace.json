@@ -1,0 +1,11 @@
+{
+  "command": "codex",
+  "args": [
+    "exec",
+    "--sandbox",
+    "workspace-write",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "marco"
+  ]
+}

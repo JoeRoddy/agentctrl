@@ -1,0 +1,9 @@
+{
+  "command": "gemini",
+  "args": [
+    "--approval-mode",
+    "auto_edit",
+    "-p",
+    "marco"
+  ]
+}

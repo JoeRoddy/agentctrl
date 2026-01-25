@@ -126,6 +126,14 @@ export function translateInvocation(
 		}
 	}
 
+	if (mode === "one-shot" && base.args?.includes("exec")) {
+		const searchIndex = args.indexOf("--search");
+		if (searchIndex > -1) {
+			args.splice(searchIndex, 1);
+			args.unshift("--search");
+		}
+	}
+
 	const { promptArgs, position } = buildPromptArgs(invocation, cli, warnings);
 	const passthroughArgs = includePassthrough ? invocation.passthrough.args : [];
 

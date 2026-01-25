@@ -20,13 +20,13 @@ export const copilotTarget: TargetDefinition = {
 		},
 	},
 	outputs: {
-		skills: "{repoRoot}/.github/skills/{itemName}",
+		skills: "{repoRoot}/.omniagent/skills/{itemName}",
 		subagents: {
-			path: "{repoRoot}/.github/skills/{itemName}",
+			path: "{repoRoot}/.omniagent/subagents/{itemName}",
 			fallback: { mode: "convert", targetType: "skills" },
 		},
 		commands: {
-			projectPath: "{repoRoot}/.github/skills/{itemName}",
+			projectPath: "{repoRoot}/.omniagent/commands/{itemName}",
 			fallback: { mode: "convert", targetType: "skills" },
 		},
 		instructions: {

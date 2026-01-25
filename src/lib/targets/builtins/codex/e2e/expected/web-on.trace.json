@@ -1,0 +1,10 @@
+{
+  "command": "codex",
+  "args": [
+    "--search",
+    "exec",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "marco"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "command": "codex",
+  "args": [
+    "exec",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "--version",
+    "marco"
+  ]
+}

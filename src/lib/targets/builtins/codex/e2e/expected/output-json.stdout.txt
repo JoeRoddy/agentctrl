@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"019bf5c6-180e-71c3-89db-2ecb71fe7967"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"polo"}}
+{"type":"turn.completed","usage":{"input_tokens":9217,"cached_input_tokens":6656,"output_tokens":8}}

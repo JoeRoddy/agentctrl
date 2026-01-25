@@ -136,4 +136,35 @@ describe("CLI shim execution", () => {
 		expect(options).toEqual({ stdio: "inherit" });
 		expect(result).toEqual({ exitCode: code, reason });
 	});
+
+	it("emits a translation trace when enabled", async () => {
+		const invocation = await buildInvocation([
+			"--agent",
+			"codex",
+			"--output",
+			"json",
+			"-p",
+			"Hello",
+		]);
+		const spawn = createSpawnStub(0);
+		const stderrWrites: string[] = [];
+		const stderr = {
+			write: (chunk: string) => {
+				stderrWrites.push(String(chunk));
+				return true;
+			},
+		} as NodeJS.WriteStream;
+
+		const result = await executeInvocation(invocation, { spawn, stderr, traceTranslate: true });
+
+		const traceLine = stderrWrites.find((line) => line.startsWith("OA_TRANSLATION="));
+		expect(traceLine).toBeDefined();
+
+		const payload = JSON.parse(traceLine?.replace("OA_TRANSLATION=", "").trim() ?? "{}");
+		expect(payload.agent).toBe("codex");
+		expect(payload.mode).toBe("one-shot");
+		expect(payload.command).toBe("codex");
+		expect(payload.args).toEqual(["exec", "--json", "Hello"]);
+		expect(result.exitCode).toBe(0);
+	});
 });

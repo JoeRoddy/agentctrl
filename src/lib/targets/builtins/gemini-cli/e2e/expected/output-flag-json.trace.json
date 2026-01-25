@@ -1,0 +1,9 @@
+{
+  "command": "gemini",
+  "args": [
+    "--output-format",
+    "json",
+    "-p",
+    "marco"
+  ]
+}

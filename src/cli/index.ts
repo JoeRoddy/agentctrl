@@ -141,6 +141,10 @@ export function runCli(argv = process.argv, options: RunCliOptions = {}) {
 						type: "string",
 						describe: "Select the agent (built-in id or configured alias).",
 					})
+					.option("trace-translate", {
+						type: "boolean",
+						describe: "Emit a JSON line to stderr with the translated agent command/args.",
+					})
 					.epilog(SHIM_CAPABILITIES),
 			async () => {
 				const exitCode = await runShim(args, options.shim);

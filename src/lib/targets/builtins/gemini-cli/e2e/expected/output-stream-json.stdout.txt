@@ -1,0 +1,4 @@
+{"type":"init","timestamp":"2026-01-25T15:52:28.671Z","session_id":"d6bacf59-d09f-4163-b526-5cda992b207b","model":"auto-gemini-2.5"}
+{"type":"message","timestamp":"2026-01-25T15:52:28.672Z","role":"user","content":"marco"}
+{"type":"message","timestamp":"2026-01-25T15:52:31.804Z","role":"assistant","content":"Okay, I'm ready for your first command.","delta":true}
+{"type":"result","timestamp":"2026-01-25T15:52:31.817Z","status":"success","stats":{"total_tokens":10744,"input_tokens":10483,"output_tokens":66,"cached":9624,"input":859,"duration_ms":3146,"tool_calls":0}}

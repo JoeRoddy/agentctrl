@@ -1,0 +1,8 @@
+{
+  "command": "claude",
+  "args": [
+    "-p",
+    "marco",
+    "--version"
+  ]
+}

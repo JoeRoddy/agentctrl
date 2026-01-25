@@ -92,6 +92,9 @@ These mappings must be verified against actual agent CLIs before finalizing:
 ## Tests
 - Update existing shim tests to assert translated argv (not shim flags).
 	- `tests/commands/cli-shim-*.test.ts`
+- Add baseline-first E2E coverage that records real CLI outputs and compares shim stdout/stderr
+  + translation trace command/args against expected invocations.
+	- Baselines recorded for codex/claude/gemini/copilot; shim compare passing for all agents after output normalization.
 - Add per-agent translation test cases for:
 	- one-shot vs interactive command shapes
 	- output json mapping

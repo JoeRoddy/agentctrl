@@ -1,0 +1,7 @@
+{
+  "command": "gemini",
+  "args": [
+    "-p",
+    "marco"
+  ]
+}

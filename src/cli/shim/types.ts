@@ -9,7 +9,7 @@ import {
 	type SandboxMode,
 } from "../../lib/targets/config-types.js";
 
-export { APPROVAL_POLICIES, OUTPUT_FORMATS, SANDBOX_MODES };
+export { APPROVAL_POLICIES, type ApprovalPolicy, OUTPUT_FORMATS, type OutputFormat, SANDBOX_MODES, type SandboxMode };
 
 export type FlagSource = "default" | "flag" | "alias" | "derived";
 
@@ -34,6 +34,7 @@ export type ParsedShimFlags = {
 	webExplicit: boolean;
 	agent: string | null;
 	agentExplicit: boolean;
+	traceTranslate: boolean;
 	help: boolean;
 	version: boolean;
 	hasDelimiter: boolean;

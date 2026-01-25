@@ -1,0 +1,12 @@
+{
+  "command": "codex",
+  "args": [
+    "exec",
+    "--yolo",
+    "--sandbox",
+    "danger-full-access",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "marco"
+  ]
+}

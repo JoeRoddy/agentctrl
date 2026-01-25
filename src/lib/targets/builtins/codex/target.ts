@@ -38,13 +38,13 @@ export const codexTarget: TargetDefinition = {
 		},
 	},
 	outputs: {
-		skills: "{repoRoot}/.codex/skills/{itemName}",
+		skills: "{repoRoot}/.omniagent/skills/{itemName}",
 		subagents: {
-			path: "{repoRoot}/.codex/skills/{itemName}",
+			path: "{repoRoot}/.omniagent/subagents/{itemName}",
 			fallback: { mode: "convert", targetType: "skills" },
 		},
 		commands: {
-			userPath: "{homeDir}/.codex/prompts/{itemName}.md",
+			userPath: "{homeDir}/.omniagent/commands/{itemName}.md",
 		},
 		instructions: {
 			filename: "AGENTS.md",
