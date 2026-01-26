@@ -7,8 +7,7 @@
 - Validate and test real argv translation, not just flag parsing.
 
 ## Status (2026-01-26)
-- Baseline E2E harness + expected invocations in place; codex compare passes after default
-  enforcement change; claude/gemini/copilot compares pending.
+- Baseline E2E harness + expected invocations in place; shim compare passes for codex/claude/gemini/copilot after default enforcement.
 - Default flags (approval/sandbox/output/web) are now always translated; warnings only on explicit
   flags.
 - Codex one-shot now uses `--full-auto` for prompt/auto-edit defaults; interactive keeps
