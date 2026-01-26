@@ -3,6 +3,7 @@
   "args": [
     "--approval-mode",
     "auto_edit",
+    "--sandbox",
     "-p",
     "marco"
   ]

@@ -54,7 +54,11 @@ export type SessionConfiguration = {
 	outputFormat: OutputFormat;
 	model: string | null;
 	webEnabled: boolean;
+	approvalExplicit: boolean;
 	sandboxExplicit: boolean;
+	outputExplicit: boolean;
+	modelExplicit: boolean;
+	webExplicit: boolean;
 };
 
 export type AgentSelection = {
@@ -69,11 +73,11 @@ export type AgentPassthrough = {
 };
 
 export type FlagRequests = {
-	approval?: ApprovalPolicy;
-	sandbox?: SandboxMode;
-	output?: OutputFormat;
+	approval: ApprovalPolicy;
+	sandbox: SandboxMode;
+	output: OutputFormat;
 	model?: string;
-	web?: boolean;
+	web: boolean;
 };
 
 export type ResolvedInvocation = {

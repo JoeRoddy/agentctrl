@@ -60,7 +60,14 @@ describe("CLI shim interactive mode", () => {
 			expect(spawn).toHaveBeenCalledTimes(1);
 			const [command, args] = spawn.mock.calls[0] as SpawnCall;
 			expect(command).toBe("codex");
-			expect(args).toEqual([]);
+			expect(args).toEqual([
+				"--ask-for-approval",
+				"on-request",
+				"--sandbox",
+				"workspace-write",
+				"--disable",
+				"web_search_request",
+			]);
 			expect(exitSpy).not.toHaveBeenCalled();
 		});
 	});
@@ -78,7 +85,16 @@ describe("CLI shim interactive mode", () => {
 		);
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["--ask-for-approval", "on-request", "-m", "gpt-5"]);
+		expect(args).toEqual([
+			"--ask-for-approval",
+			"on-request",
+			"--sandbox",
+			"workspace-write",
+			"-m",
+			"gpt-5",
+			"--disable",
+			"web_search_request",
+		]);
 	});
 
 	it("returns invalid usage when no default agent is configured", async () => {

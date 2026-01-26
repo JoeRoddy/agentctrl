@@ -145,8 +145,20 @@ describe("CLI shim flag parsing", () => {
 		const invocation = await buildInvocation(["--agent", "codex", "--web"]);
 		const result = buildAgentArgs(invocation);
 
-		expect(result.shimArgs).toEqual(["--search"]);
-		expect(result.args).toEqual(["--search"]);
+		expect(result.shimArgs).toEqual([
+			"--ask-for-approval",
+			"on-request",
+			"--sandbox",
+			"workspace-write",
+			"--search",
+		]);
+		expect(result.args).toEqual([
+			"--ask-for-approval",
+			"on-request",
+			"--sandbox",
+			"workspace-write",
+			"--search",
+		]);
 	});
 
 	it("resolves mode/output for common flag combinations", async () => {

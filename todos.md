@@ -24,6 +24,15 @@
 - [x] Verify passthrough flags per agent (update agent.config.ts if needed)
 - [x] Compare shim to baselines: OA_E2E=1 OA_E2E_AGENT=codex OA_E2E_CODEX_MODEL=... npm test -- tests/e2e/cli-shim/cli-shim.e2e.test.ts
 - [x] Compare shim to baselines for claude/gemini/copilot
+- [x] Re-record baselines after default-flag enforcement (codex/claude/gemini/copilot)
+- [x] Run shim compare suite after default enforcement (codex):
+  OA_E2E=1 OA_E2E_AGENT=codex OA_E2E_CODEX_MODEL=... npm test -- tests/e2e/cli-shim/cli-shim.e2e.test.ts
+- [ ] Run shim compare suite after default enforcement (claude):
+  OA_E2E=1 OA_E2E_AGENT=claude OA_E2E_CLAUDE_MODEL=opus npm test -- tests/e2e/cli-shim/cli-shim.e2e.test.ts
+- [ ] Run shim compare suite after default enforcement (gemini):
+  OA_E2E=1 OA_E2E_AGENT=gemini OA_E2E_GEMINI_MODEL=gemini-2.5-flash npm test -- tests/e2e/cli-shim/cli-shim.e2e.test.ts
+- [ ] Run shim compare suite after default enforcement (copilot):
+  OA_E2E=1 OA_E2E_AGENT=copilot OA_E2E_COPILOT_MODEL=gpt-5.2 npm test -- tests/e2e/cli-shim/cli-shim.e2e.test.ts
 - [ ] (Optional) Record all agents baselines in one go (real CLI): OA_E2E_RECORD_BASELINE=1 npm test -- tests/e2e/cli-shim/cli-shim.e2e.test.ts
 - [ ] Document E2E run/record instructions (optional)
 

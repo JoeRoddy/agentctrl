@@ -1,6 +1,9 @@
 {
   "command": "gemini",
   "args": [
+    "--approval-mode",
+    "default",
+    "--sandbox",
     "--output-format",
     "stream-json",
     "-p",

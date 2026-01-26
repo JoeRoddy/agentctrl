@@ -39,7 +39,17 @@ describe("CLI shim passthrough", () => {
 		);
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["--some-flag", "--model", "gpt-5"]);
+		expect(args).toEqual([
+			"--ask-for-approval",
+			"on-request",
+			"--sandbox",
+			"workspace-write",
+			"--disable",
+			"web_search_request",
+			"--some-flag",
+			"--model",
+			"gpt-5",
+		]);
 	});
 
 	it("rejects passthrough when --agent is missing", async () => {
@@ -94,7 +104,11 @@ describe("CLI shim passthrough", () => {
 		expect(args).toEqual([
 			"exec",
 			"--full-auto",
+			"--sandbox",
+			"workspace-write",
 			"--json",
+			"--disable",
+			"web_search_request",
 			"--some-flag",
 			"--extra",
 			"value",

@@ -34,28 +34,15 @@ type ResolveFromFlagsOptions = {
 };
 
 function buildRequests(flags: ParsedShimFlags): FlagRequests {
-	const requests: FlagRequests = {};
-
-	if (flags.approvalExplicit) {
-		requests.approval = flags.approval;
-	}
-
-	const sandboxRequested =
-		flags.sandboxExplicit || (flags.approvalExplicit && flags.approval === "yolo");
-	if (sandboxRequested) {
-		requests.sandbox = flags.sandbox;
-	}
-
-	if (flags.outputExplicit) {
-		requests.output = flags.output;
-	}
+	const requests: FlagRequests = {
+		approval: flags.approval,
+		sandbox: flags.sandbox,
+		output: flags.output,
+		web: flags.web,
+	};
 
 	if (flags.modelExplicit && flags.model) {
 		requests.model = flags.model;
-	}
-
-	if (flags.webExplicit) {
-		requests.web = flags.web;
 	}
 
 	return requests;
@@ -68,7 +55,11 @@ function buildSession(flags: ParsedShimFlags): SessionConfiguration {
 		outputFormat: flags.output,
 		model: flags.model,
 		webEnabled: flags.web,
+		approvalExplicit: flags.approvalExplicit,
 		sandboxExplicit: flags.sandboxExplicit,
+		outputExplicit: flags.outputExplicit,
+		modelExplicit: flags.modelExplicit,
+		webExplicit: flags.webExplicit,
 	};
 }
 

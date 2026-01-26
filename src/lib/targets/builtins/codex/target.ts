@@ -12,10 +12,17 @@ export const codexTarget: TargetDefinition = {
 		passthrough: { position: "before-prompt" },
 		flags: {
 			approval: {
-				values: {
-					prompt: ["--ask-for-approval", "on-request"],
-					"auto-edit": ["--full-auto"],
-					yolo: ["--yolo"],
+				byMode: {
+					interactive: {
+						prompt: ["--ask-for-approval", "on-request"],
+						"auto-edit": ["--full-auto"],
+						yolo: ["--yolo"],
+					},
+					"one-shot": {
+						prompt: ["--full-auto"],
+						"auto-edit": ["--full-auto"],
+						yolo: ["--yolo"],
+					},
 				},
 			},
 			sandbox: {
@@ -34,7 +41,7 @@ export const codexTarget: TargetDefinition = {
 				},
 			},
 			model: { flag: ["-m"] },
-			web: { on: ["--search"], off: [] },
+			web: { on: ["--search"], off: ["--disable", "web_search_request"] },
 		},
 	},
 	outputs: {

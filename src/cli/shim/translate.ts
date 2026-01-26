@@ -75,54 +75,61 @@ export function translateInvocation(
 	const args: string[] = [...(base.args ?? [])];
 
 	const { requests } = invocation;
+	const { approvalExplicit, modelExplicit, outputExplicit, sandboxExplicit, webExplicit } =
+		invocation.session;
+	const sandboxWarnExplicit = sandboxExplicit || (approvalExplicit && requests.approval === "yolo");
 	const flags = cli.flags;
 
-	if (requests.approval) {
-		const mapped = resolveFlagMapValue(flags?.approval, mode, requests.approval);
-		if (mapped === undefined || mapped === null) {
+	const mappedApproval = resolveFlagMapValue(flags?.approval, mode, requests.approval);
+	if (mappedApproval === undefined || mappedApproval === null) {
+		if (approvalExplicit) {
 			warnings.push(formatWarning(invocation.agent.id, "--approval", requests.approval));
-		} else {
-			args.push(...mapped);
 		}
+	} else {
+		args.push(...mappedApproval);
 	}
 
-	if (requests.sandbox) {
-		const mapped = resolveFlagMapValue(flags?.sandbox, mode, requests.sandbox);
-		if (mapped === undefined || mapped === null) {
+	const mappedSandbox = resolveFlagMapValue(flags?.sandbox, mode, requests.sandbox);
+	if (mappedSandbox === undefined || mappedSandbox === null) {
+		if (sandboxWarnExplicit) {
 			warnings.push(formatWarning(invocation.agent.id, "--sandbox", requests.sandbox));
-		} else {
-			args.push(...mapped);
 		}
+	} else {
+		args.push(...mappedSandbox);
 	}
 
-	if (requests.output) {
-		const mapped = resolveFlagMapValue(flags?.output, mode, requests.output);
-		if (mapped === undefined || mapped === null) {
+	const mappedOutput = resolveFlagMapValue(flags?.output, mode, requests.output);
+	if (mappedOutput === undefined || mappedOutput === null) {
+		if (outputExplicit) {
 			warnings.push(formatWarning(invocation.agent.id, "--output", requests.output));
-		} else {
-			args.push(...mapped);
 		}
+	} else {
+		args.push(...mappedOutput);
 	}
 
 	if (requests.model) {
 		if (!flags?.model || !modeAllowed(flags.model.modes, mode)) {
-			warnings.push(formatWarning(invocation.agent.id, "--model", requests.model));
+			if (modelExplicit) {
+				warnings.push(formatWarning(invocation.agent.id, "--model", requests.model));
+			}
 		} else {
 			args.push(...flags.model.flag, requests.model);
 		}
 	}
 
-	if (requests.web !== undefined) {
-		const modeAllowedForWeb = modeAllowed(flags?.web?.modes, mode);
-		if (!flags?.web || !modeAllowedForWeb) {
+	const modeAllowedForWeb = modeAllowed(flags?.web?.modes, mode);
+	if (!flags?.web || !modeAllowedForWeb) {
+		if (webExplicit) {
 			warnings.push(formatWarning(invocation.agent.id, "--web", requests.web ? "on" : "off"));
-		} else {
-			const mapped = requests.web ? flags.web.on : flags.web.off;
-			if (mapped === undefined || mapped === null) {
+		}
+	} else {
+		const mapped = requests.web ? flags.web.on : flags.web.off;
+		if (mapped === undefined || mapped === null) {
+			if (webExplicit) {
 				warnings.push(formatWarning(invocation.agent.id, "--web", requests.web ? "on" : "off"));
-			} else {
-				args.push(...mapped);
 			}
+		} else {
+			args.push(...mapped);
 		}
 	}
 

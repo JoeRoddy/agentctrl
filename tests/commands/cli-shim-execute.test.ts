@@ -51,7 +51,16 @@ describe("CLI shim execution", () => {
 
 		const [command, args, options] = spawn.mock.calls[0] as SpawnCall;
 		expect(command).toBe("codex");
-		expect(args).toEqual(["exec", "--json", "Hello"]);
+		expect(args).toEqual([
+			"exec",
+			"--full-auto",
+			"--sandbox",
+			"workspace-write",
+			"--json",
+			"--disable",
+			"web_search_request",
+			"Hello",
+		]);
 		expect(options).toEqual({ stdio: "inherit" });
 		expect(result).toEqual({ exitCode: 0, reason: "success" });
 	});
@@ -164,7 +173,16 @@ describe("CLI shim execution", () => {
 		expect(payload.agent).toBe("codex");
 		expect(payload.mode).toBe("one-shot");
 		expect(payload.command).toBe("codex");
-		expect(payload.args).toEqual(["exec", "--json", "Hello"]);
+		expect(payload.args).toEqual([
+			"exec",
+			"--full-auto",
+			"--sandbox",
+			"workspace-write",
+			"--json",
+			"--disable",
+			"web_search_request",
+			"Hello",
+		]);
 		expect(result.exitCode).toBe(0);
 	});
 });

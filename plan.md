@@ -6,12 +6,16 @@
 - Support interactive vs one-shot command shapes and prompt placement.
 - Validate and test real argv translation, not just flag parsing.
 
-## Status (2026-01-25)
-- Baseline E2E harness + expected invocations in place; compare runs passing per agent.
-- Model baselines recorded with envs: claude=opus, gemini=gemini-2.5-flash,
-  copilot=gpt-5.2.
-- Copilot CLI target mapping now includes `--model`.
-- Optional follow-ups: record all agents in one go; document record/compare commands.
+## Status (2026-01-26)
+- Baseline E2E harness + expected invocations in place; codex compare passes after default
+  enforcement change; claude/gemini/copilot compares pending.
+- Default flags (approval/sandbox/output/web) are now always translated; warnings only on explicit
+  flags.
+- Codex one-shot now uses `--full-auto` for prompt/auto-edit defaults; interactive keeps
+  `--ask-for-approval on-request`.
+- Codex web-off enforced via `--disable web_search_request`.
+- Baselines re-recorded for codex/claude/gemini/copilot with default enforcement.
+- Optional follow-ups: run shim compare suite, record all agents in one go, document commands.
 
 ## Decisions (locked)
 - `--agent` accepts any resolved target id/alias from config (not just preconfigured ids).
@@ -76,7 +80,7 @@ These mappings must be verified against actual agent CLIs before finalizing:
 	- approval: `--ask-for-approval on-request`, `--full-auto`, `--yolo`
 	- sandbox: `--sandbox workspace-write|off`
 	- output: `--json` / `--json` for stream-json if supported
-	- web: `--search` on, (off: none)
+	- web: `--search` on, `--disable web_search_request` off
 	- model: `-m` or `--model` (confirm)
 - **Claude Code**
 	- interactive: `claude`
@@ -101,7 +105,7 @@ These mappings must be verified against actual agent CLIs before finalizing:
 	- `tests/commands/cli-shim-*.test.ts`
 - Add baseline-first E2E coverage that records real CLI outputs and compares shim stdout/stderr
   + translation trace command/args against expected invocations.
-	- Baselines recorded for codex/claude/gemini/copilot; shim compare passing for all agents after output normalization.
+	- Baselines recorded for codex/claude/gemini/copilot; shim compare passes for codex after output normalization (claude/gemini/copilot pending).
 - Add per-agent translation test cases for:
 	- one-shot vs interactive command shapes
 	- output json mapping

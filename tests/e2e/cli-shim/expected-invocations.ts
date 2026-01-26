@@ -8,6 +8,9 @@ export type ExpectedInvocation = {
 
 type CaseId = (typeof SHARED_CASES)[number]["id"];
 type AgentId = "codex" | "claude" | "gemini" | "copilot";
+type ApprovalValue = "prompt" | "auto-edit" | "yolo";
+type SandboxValue = "workspace-write" | "off";
+type OutputValue = "text" | "json" | "stream-json";
 
 function formatWarning(agentId: string, flag: string, value?: string): string {
 	const suffix = value ? ` (${value})` : "";
@@ -26,6 +29,35 @@ function withWarnings(
 
 function collectPassthrough(agent: AgentE2EConfig, extra: string[] = []): string[] {
 	return [...(agent.passthroughDefaults ?? []), ...extra];
+}
+
+function resolveApproval(caseId: CaseId): ApprovalValue {
+	if (caseId === "approval-auto-edit" || caseId === "auto-edit-alias") {
+		return "auto-edit";
+	}
+	if (caseId === "approval-yolo") {
+		return "yolo";
+	}
+	return "prompt";
+}
+
+function resolveSandbox(caseId: CaseId): SandboxValue {
+	if (caseId === "approval-yolo") {
+		return "off";
+	}
+	return "workspace-write";
+}
+
+function resolveOutput(caseId: CaseId): OutputValue {
+	switch (caseId) {
+		case "output-json":
+		case "output-flag-json":
+			return "json";
+		case "output-stream-json":
+			return "stream-json";
+		default:
+			return "text";
+	}
 }
 
 function buildCodexInvocation(
@@ -56,41 +88,59 @@ function buildCodex(caseId: CaseId, agent: AgentE2EConfig): ExpectedInvocation |
 		caseId === "passthrough"
 			? collectPassthrough(agent, agent.passthroughArgs ?? [])
 			: collectPassthrough(agent);
-	let flags: string[] = [];
+	const approval = resolveApproval(caseId);
+	const sandbox = resolveSandbox(caseId);
+	const output = resolveOutput(caseId);
+	const flags: string[] = [];
+	const prefixFlags: string[] = caseId === "web-on" ? ["--search"] : [];
 
-	switch (caseId) {
-		case "basic-oneshot":
-			break;
-		case "approval-auto-edit":
-		case "auto-edit-alias":
-			flags = ["--full-auto"];
-			break;
-		case "approval-yolo":
-			flags = ["--yolo", "--sandbox", "danger-full-access"];
-			break;
-		case "sandbox-workspace-write":
-			flags = ["--sandbox", "workspace-write"];
-			break;
-		case "output-json":
-		case "output-flag-json":
-		case "output-stream-json":
-			flags = ["--json"];
-			break;
-		case "web-on":
-			return buildCodexInvocation(agent, [], passthrough, ["--search"]);
-		case "model":
-			if (!agent.model) {
-				return null;
-			}
-			flags = ["-m", agent.model];
-			break;
-		case "passthrough":
-			break;
-		default:
-			return null;
+	if (approval === "prompt" || approval === "auto-edit") {
+		flags.push("--full-auto");
+	} else {
+		flags.push("--yolo");
 	}
 
-	return buildCodexInvocation(agent, flags, passthrough);
+	if (sandbox === "workspace-write") {
+		flags.push("--sandbox", "workspace-write");
+	} else {
+		flags.push("--sandbox", "danger-full-access");
+	}
+
+	if (output === "json" || output === "stream-json") {
+		flags.push("--json");
+	}
+
+	if (caseId === "model") {
+		if (!agent.model) {
+			return null;
+		}
+		flags.push("-m", agent.model);
+	}
+
+	if (caseId !== "web-on") {
+		flags.push("--disable", "web_search_request");
+	}
+
+	if (caseId === "web-on") {
+		return buildCodexInvocation(agent, flags, passthrough, prefixFlags);
+	}
+
+	if (
+		caseId !== "basic-oneshot" &&
+		caseId !== "approval-auto-edit" &&
+		caseId !== "auto-edit-alias" &&
+		caseId !== "approval-yolo" &&
+		caseId !== "sandbox-workspace-write" &&
+		caseId !== "output-json" &&
+		caseId !== "output-flag-json" &&
+		caseId !== "output-stream-json" &&
+		caseId !== "model" &&
+		caseId !== "passthrough"
+	) {
+		return null;
+	}
+
+	return buildCodexInvocation(agent, flags, passthrough, prefixFlags);
 }
 
 function buildClaude(caseId: CaseId, agent: AgentE2EConfig): ExpectedInvocation | null {
@@ -145,40 +195,50 @@ function buildGemini(caseId: CaseId, agent: AgentE2EConfig): ExpectedInvocation 
 		caseId === "passthrough"
 			? collectPassthrough(agent, agent.passthroughArgs ?? [])
 			: collectPassthrough(agent);
-	let flags: string[] = [];
+	const approval = resolveApproval(caseId);
+	const sandbox = resolveSandbox(caseId);
+	const output = resolveOutput(caseId);
+	const flags: string[] = [];
 
-	switch (caseId) {
-		case "basic-oneshot":
-			break;
-		case "approval-auto-edit":
-		case "auto-edit-alias":
-			flags = ["--approval-mode", "auto_edit"];
-			break;
-		case "approval-yolo":
-			flags = ["--yolo"];
-			break;
-		case "sandbox-workspace-write":
-			flags = ["--sandbox"];
-			break;
-		case "output-json":
-		case "output-flag-json":
-			flags = ["--output-format", "json"];
-			break;
-		case "output-stream-json":
-			flags = ["--output-format", "stream-json"];
-			break;
-		case "web-on":
-			break;
-		case "model":
-			if (!agent.model) {
-				return null;
-			}
-			flags = ["--model", agent.model];
-			break;
-		case "passthrough":
-			break;
-		default:
+	if (approval === "prompt") {
+		flags.push("--approval-mode", "default");
+	} else if (approval === "auto-edit") {
+		flags.push("--approval-mode", "auto_edit");
+	} else {
+		flags.push("--yolo");
+	}
+
+	if (sandbox === "workspace-write") {
+		flags.push("--sandbox");
+	}
+
+	if (output === "json") {
+		flags.push("--output-format", "json");
+	} else if (output === "stream-json") {
+		flags.push("--output-format", "stream-json");
+	}
+
+	if (caseId === "model") {
+		if (!agent.model) {
 			return null;
+		}
+		flags.push("--model", agent.model);
+	}
+
+	if (
+		caseId !== "basic-oneshot" &&
+		caseId !== "approval-auto-edit" &&
+		caseId !== "auto-edit-alias" &&
+		caseId !== "approval-yolo" &&
+		caseId !== "sandbox-workspace-write" &&
+		caseId !== "output-json" &&
+		caseId !== "output-flag-json" &&
+		caseId !== "output-stream-json" &&
+		caseId !== "web-on" &&
+		caseId !== "model" &&
+		caseId !== "passthrough"
+	) {
+		return null;
 	}
 
 	return buildFlagPromptInvocation(agent, flags, passthrough);

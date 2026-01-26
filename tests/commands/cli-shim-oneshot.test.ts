@@ -35,7 +35,15 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["exec", "Hello"]);
+		expect(args).toEqual([
+			"exec",
+			"--full-auto",
+			"--sandbox",
+			"workspace-write",
+			"--disable",
+			"web_search_request",
+			"Hello",
+		]);
 		expect(exitSpy).not.toHaveBeenCalled();
 	});
 
@@ -50,7 +58,15 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["exec", "From stdin"]);
+		expect(args).toEqual([
+			"exec",
+			"--full-auto",
+			"--sandbox",
+			"workspace-write",
+			"--disable",
+			"web_search_request",
+			"From stdin",
+		]);
 	});
 
 	it("prefers --prompt over piped stdin when both are present", async () => {
@@ -64,7 +80,15 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["exec", "Flag wins"]);
+		expect(args).toEqual([
+			"exec",
+			"--full-auto",
+			"--sandbox",
+			"workspace-write",
+			"--disable",
+			"web_search_request",
+			"Flag wins",
+		]);
 	});
 
 	it("ignores piped stdin when --prompt is explicit", async () => {
@@ -145,7 +169,15 @@ describe("CLI shim one-shot mode", () => {
 		);
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["exec", "--full-auto", "Run automation"]);
+		expect(args).toEqual([
+			"exec",
+			"--full-auto",
+			"--sandbox",
+			"workspace-write",
+			"--disable",
+			"web_search_request",
+			"Run automation",
+		]);
 	});
 
 	it("passes --yolo in one-shot mode without prompting", async () => {
@@ -158,6 +190,14 @@ describe("CLI shim one-shot mode", () => {
 		});
 
 		const [, args] = spawn.mock.calls[0] as SpawnCall;
-		expect(args).toEqual(["exec", "--yolo", "--sandbox", "danger-full-access", "No prompts"]);
+		expect(args).toEqual([
+			"exec",
+			"--yolo",
+			"--sandbox",
+			"danger-full-access",
+			"--disable",
+			"web_search_request",
+			"No prompts",
+		]);
 	});
 });
