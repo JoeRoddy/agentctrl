@@ -56,4 +56,5 @@ TypeScript 5.x, Node.js 18+: Enforced by Biome (formatting and linting)
 <!-- MANUAL ADDITIONS START -->
   (skills, subagents, slash commands) and must be supported by future syncable features.
   tool-specific directories so we don't publish junk.
+  CLI shim E2E docs: docs/cli-shim-e2e.md
 <!-- MANUAL ADDITIONS END -->
