@@ -1,0 +1,23 @@
+OpenAI Codex v0.91.0 (research preview)
+--------
+workdir: /Users/joeroddy/Documents/dev/projects/open-source/omniagent
+model: gpt-5.2-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: auto
+session id: 019bf773-4082-7cf0-8bea-e0615c372e0d
+--------
+user
+marco
+mcp startup: no servers
+
+thinking
+**Responding with confirmation**
+
+I'm preparing to reply with "polo" as requested.
+codex
+polo
+tokens used
+2,569

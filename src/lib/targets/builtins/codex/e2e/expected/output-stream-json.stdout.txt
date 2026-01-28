@@ -1,0 +1,5 @@
+{"type":"thread.started","thread_id":"019bf773-7239-7fc2-b0b6-638c954f2a7d"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"reasoning","text":"**Responding with keyword**\n\nThe required response is simply \"polo\"."}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"polo"}}
+{"type":"turn.completed","usage":{"input_tokens":9217,"cached_input_tokens":9088,"output_tokens":8}}

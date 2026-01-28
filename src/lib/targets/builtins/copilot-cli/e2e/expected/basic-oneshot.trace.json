@@ -1,0 +1,8 @@
+{
+  "command": "copilot",
+  "args": [
+    "-p",
+    "marco",
+    "--silent"
+  ]
+}

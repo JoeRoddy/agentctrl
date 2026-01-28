@@ -1,0 +1,10 @@
+{
+  "command": "claude",
+  "args": [
+    "-p",
+    "marco"
+  ],
+  "warnings": [
+    "Warning: claude does not support --sandbox (workspace-write); ignoring."
+  ]
+}
