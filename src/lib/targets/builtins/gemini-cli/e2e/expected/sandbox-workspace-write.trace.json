@@ -5,6 +5,6 @@
     "default",
     "--sandbox",
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }

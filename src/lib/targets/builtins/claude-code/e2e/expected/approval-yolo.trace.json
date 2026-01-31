@@ -3,6 +3,6 @@
   "args": [
     "--dangerously-skip-permissions",
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }

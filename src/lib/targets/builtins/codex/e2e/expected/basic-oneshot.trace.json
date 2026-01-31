@@ -8,6 +8,6 @@
     "web_search_request",
     "-c",
     "model_reasoning_effort=\"high\"",
-    "marco"
+    "Output exactly: 5"
   ]
 }

@@ -2,7 +2,7 @@
   "command": "claude",
   "args": [
     "-p",
-    "marco"
+    "Output exactly: 5"
   ],
   "warnings": [
     "Warning: claude does not support --sandbox (workspace-write); ignoring."

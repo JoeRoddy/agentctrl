@@ -7,6 +7,6 @@
     "--model",
     "gemini-2.5-flash-lite",
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }

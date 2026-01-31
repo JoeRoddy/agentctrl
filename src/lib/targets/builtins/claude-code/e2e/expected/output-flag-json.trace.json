@@ -4,6 +4,6 @@
     "--output-format",
     "json",
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }

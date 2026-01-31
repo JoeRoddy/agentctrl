@@ -16,7 +16,7 @@ export type ShimCase = {
 	skipWhen?: (agent: AgentE2EConfig) => string | null;
 };
 
-export const PROMPT = "marco";
+export const PROMPT = "Output exactly: 5";
 
 export const SHARED_CASES: ShimCase[] = [
 	{

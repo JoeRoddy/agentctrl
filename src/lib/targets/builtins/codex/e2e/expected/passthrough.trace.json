@@ -9,6 +9,6 @@
     "-c",
     "model_reasoning_effort=\"high\"",
     "--version",
-    "marco"
+    "Output exactly: 5"
   ]
 }

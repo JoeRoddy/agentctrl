@@ -3,6 +3,6 @@
   "args": [
     "--yolo",
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }

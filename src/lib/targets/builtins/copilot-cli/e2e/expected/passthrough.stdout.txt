@@ -1,2 +1,2 @@
-0.0.394
-Commit: 3d79feb
+GitHub Copilot CLI 0.0.398.
+Run 'copilot update' to check for updates.

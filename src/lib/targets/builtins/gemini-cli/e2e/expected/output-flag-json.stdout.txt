@@ -1,21 +1,21 @@
 {
-  "session_id": "f1862221-5f1c-406e-b520-62d23e2b1145",
-  "response": "Okay, I'm ready for your first command.",
+  "session_id": "87df8c17-33b0-409f-bb46-52099bbca716",
+  "response": "5",
   "stats": {
     "models": {
       "gemini-2.5-flash-lite": {
         "api": {
           "totalRequests": 1,
           "totalErrors": 0,
-          "totalLatencyMs": 1531
+          "totalLatencyMs": 8278
         },
         "tokens": {
-          "input": 338,
-          "prompt": 3206,
-          "candidates": 55,
-          "total": 3433,
-          "cached": 2868,
-          "thoughts": 172,
+          "input": 3235,
+          "prompt": 3235,
+          "candidates": 53,
+          "total": 3483,
+          "cached": 0,
+          "thoughts": 195,
           "tool": 0
         }
       },
@@ -23,15 +23,15 @@
         "api": {
           "totalRequests": 1,
           "totalErrors": 0,
-          "totalLatencyMs": 1758
+          "totalLatencyMs": 6000
         },
         "tokens": {
-          "input": 549,
-          "prompt": 7310,
-          "candidates": 11,
-          "total": 7346,
-          "cached": 6761,
-          "thoughts": 25,
+          "input": 713,
+          "prompt": 8360,
+          "candidates": 1,
+          "total": 8370,
+          "cached": 7647,
+          "thoughts": 9,
           "tool": 0
         }
       }

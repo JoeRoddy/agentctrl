@@ -7,6 +7,6 @@
     "workspace-write",
     "-c",
     "model_reasoning_effort=\"high\"",
-    "marco"
+    "Output exactly: 5"
   ]
 }

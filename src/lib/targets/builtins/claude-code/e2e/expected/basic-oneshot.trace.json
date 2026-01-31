@@ -2,6 +2,6 @@
   "command": "claude",
   "args": [
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }

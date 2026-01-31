@@ -4,7 +4,7 @@
     "--model",
     "gpt-5-mini",
     "-p",
-    "marco",
+    "Output exactly: 5",
     "--silent"
   ]
 }

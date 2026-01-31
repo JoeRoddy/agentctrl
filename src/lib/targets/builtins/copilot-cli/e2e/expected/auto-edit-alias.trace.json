@@ -2,7 +2,7 @@
   "command": "copilot",
   "args": [
     "-p",
-    "marco",
+    "Output exactly: 5",
     "--silent"
   ],
   "warnings": [

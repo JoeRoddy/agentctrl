@@ -7,6 +7,6 @@
     "--output-format",
     "stream-json",
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }

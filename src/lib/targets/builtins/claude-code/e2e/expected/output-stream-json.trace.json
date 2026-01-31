@@ -5,6 +5,6 @@
     "stream-json",
     "--verbose",
     "-p",
-    "marco"
+    "Output exactly: 5"
   ]
 }
